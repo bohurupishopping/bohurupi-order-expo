@@ -5,7 +5,7 @@ export interface WooCommerceOrder {
   order_key: string;
   created_via: string;
   version: string;
-  status: string;
+  status: 'pending' | 'processing' | 'on-hold' | 'completed' | 'cancelled' | 'refunded' | 'failed';
   currency: string;
   date_created: string;
   date_created_gmt: string;

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { addDays, subDays } from 'date-fns';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -13,11 +14,12 @@ import { fetchFirebaseOrders } from '@/services/api/firebase-orders';
 import { fetchLatestWooOrders } from '@/services/api/woo-orders';
 import type { FirebaseOrder } from '@/types/firebase-order';
 import type { TransformedOrder } from '@/services/api/woo-orders';
+import { DashboardMetrics } from '@/components/common/DashboardMetrics'; // Import the new component
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 40) / 2; // Adjusted for padding and two columns
 
-interface DashboardMetrics {
+interface DashboardMetricsType {
   totalRevenue: number;
   newOrders: number;
   activeOrders: number;
@@ -32,14 +34,6 @@ interface DashboardMetrics {
   }[];
 }
 
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  subtitle?: string;
-  gradientColors: string[]; // Use gradientColors instead of a single color
-}
-
 function useFadeInAnimation(duration: number = 500, initialTranslateY: number = 20): { fadeAnim: Animated.Value; translateY: Animated.Value } {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(initialTranslateY)).current;
@@ -52,48 +46,7 @@ function useFadeInAnimation(duration: number = 500, initialTranslateY: number = 
   return { fadeAnim, translateY };
 }
 
-function DashboardCard({ title, value, icon, subtitle, gradientColors }: DashboardCardProps) {
-  const colorScheme = useColorScheme();
-  const { fadeAnim, translateY } = useFadeInAnimation();
-
-  return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }], width: cardWidth, marginBottom: 20 }}>
-      <Pressable
-        style={({ pressed }) => [
-          styles.card,
-          {
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-          },
-          // styles.cardShadow, // Removed shadow
-        ]}
-      >
-        <LinearGradient
-          colors={gradientColors as [string, string, ...string[]]}
-          style={styles.cardContent}
-        >
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: gradientColors[0] }]}>
-              <MaterialCommunityIcons name={icon} size={24} color="white" />
-            </View>
-            <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
-              {title}
-            </ThemedText>
-          </View>
-          <ThemedText type="title" style={[styles.cardValue, { color: 'white' }]}>
-            {value}
-          </ThemedText>
-          {subtitle && (
-            <ThemedText style={[styles.cardSubtitle, { color: 'white' }]}>
-              {subtitle}
-            </ThemedText>
-          )}
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentActivities'][0] }) {
+function RecentActivityCard({ activity }: { activity: DashboardMetricsType['recentActivities'][0] }) {
   const colorScheme = useColorScheme();
   const { fadeAnim, translateY } = useFadeInAnimation(400, 10);
 
@@ -129,7 +82,7 @@ function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentAc
 export default function HomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState(false);
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
+  const [metrics, setMetrics] = useState<DashboardMetricsType>({
     totalRevenue: 0,
     newOrders: 0,
     activeOrders: 0,
@@ -141,14 +94,19 @@ export default function HomeScreen() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
+      const today = new Date();
+      const thirtyDaysAgo = subDays(today, 30);
+
       const [firebaseOrders, wooOrders] = await Promise.all([
         fetchFirebaseOrders(),
         fetchLatestWooOrders(10),
       ]);
-      const totalRevenue = calculateTotalRevenue(firebaseOrders, wooOrders);
+
+      const totalRevenue = calculateTotalRevenue(firebaseOrders, wooOrders, thirtyDaysAgo);
       const newOrders = countNewOrders(firebaseOrders, wooOrders);
       const activeOrders = countActiveOrders(firebaseOrders, wooOrders);
       const recentActivities = generateRecentActivities(firebaseOrders, wooOrders);
+
       setMetrics({
         totalRevenue,
         newOrders,
@@ -170,12 +128,6 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
-
-    // Gradients
-  const revenueGradient = ['#4CAF50', '#8BC34A'];
-  const newOrdersGradient = ['#2196F3', '#42A5F5'];
-  const activeOrdersGradient = ['#FF9800', '#FFB74D'];
-  const totalProductsGradient = ['#9C27B0', '#BA68C8'];
 
     // More pronounced header animations (same as Completed Orders)
   const headerTranslateY = scrollY.interpolate({
@@ -243,37 +195,7 @@ export default function HomeScreen() {
           { paddingTop: insets.top + 100 + 16 } // Use safe area insets + header height
         ]}
       >
-
-        <View style={styles.cardsContainer}>
-          <DashboardCard
-            title="Total Revenue"
-            value={`₹${metrics.totalRevenue.toLocaleString('en-IN')}`}
-            icon="currency-inr"
-            subtitle="+23% from last month"
-            gradientColors={revenueGradient}
-          />
-          <DashboardCard
-            title="New Orders"
-            value={metrics.newOrders.toString()}
-            icon="shopping"
-            subtitle="+12% increase"
-            gradientColors={newOrdersGradient}
-          />
-          <DashboardCard
-            title="Active Orders"
-            value={metrics.activeOrders.toString()}
-            icon="clock-outline"
-            subtitle="Orders to process"
-            gradientColors={activeOrdersGradient}
-          />
-          <DashboardCard
-            title="Total Orders"
-            value={metrics.totalProducts.toString()}
-            icon="package-variant"
-            subtitle="Combined orders"
-            gradientColors={totalProductsGradient}
-          />
-        </View>
+        <DashboardMetrics />
         <ThemedView style={[styles.recentSection, { backgroundColor: 'transparent' }]}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             Recent Activities
@@ -289,11 +211,26 @@ export default function HomeScreen() {
   );
 }
 
-function calculateTotalRevenue(firebaseOrders: FirebaseOrder[], wooOrders: TransformedOrder[]): number {
-  const firebaseRevenue = firebaseOrders.reduce((total, order) =>
-    total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0), 0);
-  const wooRevenue = wooOrders.reduce((total, order) =>
-    total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0), 0);
+function calculateTotalRevenue(
+  firebaseOrders: FirebaseOrder[],
+  wooOrders: TransformedOrder[],
+  startDate: Date
+): number {
+  const firebaseRevenue = firebaseOrders.reduce((total, order) => {
+    if (!order.createdAt || new Date(order.createdAt) < startDate) {
+      return total;
+    }
+    return total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0);
+  }, 0);
+
+  const wooRevenue = wooOrders.reduce((total, order) => {
+    const orderDate = new Date(); // Assuming 'date_created' is not available, using current date
+    if (orderDate < startDate) {
+      return total;
+    }
+    return total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0);
+  }, 0);
+
   return firebaseRevenue + wooRevenue;
 }
 
