@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
@@ -66,6 +67,14 @@ export default function FirebasePendingOrders() {
     setIsTrackingOpen(true);
   }, []);
 
+  const handleEditSuccess = useCallback(async () => {
+    // Refresh orders list
+    await handleFetchOrders();
+    if (Platform.OS !== 'web') {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [handleFetchOrders]);
+
   return (
     <ThemedView style={styles.container}>
       <Animated.View style={[
@@ -121,6 +130,7 @@ export default function FirebasePendingOrders() {
           orders={orders}
           onOrderPress={handleOrderPress}
           onTrackingPress={handleTrackingPress}
+          onEditSuccess={handleEditSuccess}
           loading={loading}
         />
       </Animated.ScrollView>
@@ -159,10 +169,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
       },
       android: {
         elevation: 4,

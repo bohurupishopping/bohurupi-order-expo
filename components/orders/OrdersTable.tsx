@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useCallback, useState } from 'react';
 import { View, StyleSheet, Animated, Pressable, Dimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
@@ -7,6 +7,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { WooCommerceOrder } from '@/types/woocommerce';
+import { OrderEditModal } from './OrderEditModal';
+import { FirebaseOrder } from '@/types/firebase-order';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 380;
@@ -73,10 +75,11 @@ function getStatusColor(status: string): StatusColorConfig {
 interface OrderRowProps {
   order: WooCommerceOrder;
   onPress: () => void;
+  onEdit: (order: FirebaseOrder) => void;
   index: number;
 }
 
-const OrderRow = React.memo(({ order, onPress, index }: OrderRowProps) => {
+const OrderRow = React.memo(({ order, onPress, onEdit, index }: OrderRowProps) => {
   const colorScheme = useColorScheme();
   const statusColor = useMemo(() => getStatusColor(order.status), [order.status]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -99,6 +102,33 @@ const OrderRow = React.memo(({ order, onPress, index }: OrderRowProps) => {
       }),
     ]).start();
   }, []);
+
+  const handleEdit = useCallback((e: any) => {
+    e.stopPropagation();
+    // Transform WooCommerce order to Firebase order format
+    const firebaseOrder: FirebaseOrder = {
+      orderId: order.number.toString(),
+      status: 'pending',
+      orderstatus: order.payment_method === 'cod' ? 'COD' : 'Prepaid',
+      customerName: `${order.billing.first_name} ${order.billing.last_name}`,
+      email: order.billing.email,
+      phone: order.billing.phone,
+      address: `${order.billing.address_1}, ${order.billing.city}, ${order.billing.state}, ${order.billing.postcode}`,
+      products: order.line_items.map(item => ({
+        details: item.name,
+        image: '',
+        orderName: item.name,
+        sku: item.sku || '',
+        sale_price: typeof item.price === 'number' ? item.price : parseFloat(item.total) / item.quantity,
+        product_page_url: '',
+        product_category: '',
+        colour: '',
+        size: '',
+        qty: item.quantity
+      }))
+    };
+    onEdit(firebaseOrder);
+  }, [order, onEdit]);
 
   return (
     <Animated.View style={[
@@ -186,6 +216,20 @@ const OrderRow = React.memo(({ order, onPress, index }: OrderRowProps) => {
               </View>
             </View>
           </View>
+
+          <Pressable
+            onPress={handleEdit}
+            style={({ pressed }) => [
+              styles.editButton,
+              { opacity: pressed ? 0.7 : 1 }
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="pencil"
+              size={18}
+              color="#8B5CF6"
+            />
+          </Pressable>
         </View>
       </Pressable>
     </Animated.View>
@@ -202,6 +246,19 @@ interface OrdersTableProps {
 
 export function OrdersTable({ orders, onOrderPress, loading }: OrdersTableProps) {
   const colorScheme = useColorScheme();
+  const [selectedOrder, setSelectedOrder] = useState<FirebaseOrder | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEdit = useCallback((order: FirebaseOrder) => {
+    setSelectedOrder(order);
+    setIsEditModalOpen(true);
+  }, []);
+
+  const handleEditSuccess = useCallback(() => {
+    // Optionally refresh the orders list
+    setIsEditModalOpen(false);
+    setSelectedOrder(null);
+  }, []);
 
   if (orders.length === 0 && !loading) {
     return (
@@ -238,16 +295,26 @@ export function OrdersTable({ orders, onOrderPress, loading }: OrdersTableProps)
   }
 
   return (
-    <View style={styles.ordersList}>
-      {orders.map((order, index) => (
-        <OrderRow
-          key={order.id}
-          order={order}
-          index={index}
-          onPress={() => onOrderPress(order)}
-        />
-      ))}
-    </View>
+    <>
+      <View style={styles.ordersList}>
+        {orders.map((order, index) => (
+          <OrderRow
+            key={order.id}
+            order={order}
+            index={index}
+            onPress={() => onOrderPress(order)}
+            onEdit={handleEdit}
+          />
+        ))}
+      </View>
+
+      <OrderEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        selectedOrder={selectedOrder}
+        onSuccess={handleEditSuccess}
+      />
+    </>
   );
 }
 
@@ -349,5 +416,18 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     fontSize: 14,
     textAlign: 'center',
+  },
+  editButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.2)',
   },
 }); 

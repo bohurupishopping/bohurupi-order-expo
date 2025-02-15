@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
@@ -66,6 +67,14 @@ export default function FirebaseCompletedOrders() {
     setIsTrackingOpen(true);
   }, []);
 
+  const handleEditSuccess = useCallback(async () => {
+    // Refresh orders list
+    await handleFetchOrders();
+    if (Platform.OS !== 'web') {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [handleFetchOrders]);
+
   return (
     <ThemedView style={styles.container}>
       <Animated.View style={[
@@ -121,6 +130,7 @@ export default function FirebaseCompletedOrders() {
           orders={orders}
           onOrderPress={handleOrderPress}
           onTrackingPress={handleTrackingPress}
+          onEditSuccess={handleEditSuccess}
           loading={loading}
         />
       </Animated.ScrollView>

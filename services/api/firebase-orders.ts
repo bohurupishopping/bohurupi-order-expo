@@ -1,7 +1,13 @@
 import type { FirebaseOrder } from '../../types/firebase-order';
+import { TransformedOrder } from './woo-orders';
 
-const API_KEY = 'x84kjjfkdjk';
-const BASE_URL = 'https://order.bohurupi.com/api';
+// import { API_BASE_URL, API_KEY } from '@/constants/config';
+
+// Add hardcoded values
+export const API_BASE_URL = 'https://order.bohurupi.com';
+export const API_KEY = 'x84kjjfkdjk';
+
+const BASE_URL = `${API_BASE_URL}/api`;
 
 // Basic auth credentials (replace with actual values)
 const EMAIL = 'admin@bohurupi.com';
@@ -58,24 +64,46 @@ export async function fetchPendingOrders(search?: string): Promise<FirebaseOrder
   return fetchFirebaseOrders('pending', search);
 }
 
-export async function createFirebaseOrder(orderData: Omit<FirebaseOrder, 'id'>): Promise<FirebaseOrder> {
+/**
+ * Creates a new order in Firebase
+ */
+export async function createFirebaseOrder(orderData: Partial<FirebaseOrder>): Promise<FirebaseOrder> {
   try {
+    // Format the dates properly
+    const now = new Date().toISOString();
+    const formattedData = {
+      ...orderData,
+      createdAt: now,
+      updatedAt: now,
+      // Ensure products array is properly formatted
+      products: orderData.products?.map(product => ({
+        ...product,
+        sale_price: typeof product.sale_price === 'string' 
+          ? parseFloat(product.sale_price) 
+          : product.sale_price
+      }))
+    };
+
     const response = await fetch(`${BASE_URL}/firebase/orders`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(orderData),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${createBasicAuth(EMAIL, PASSWORD)}`,
+        'x-api-key': API_KEY,
+      },
+      body: JSON.stringify(formattedData),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to create order');
+      throw new Error(errorData.error || `Failed to create order: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error creating order:', error);
-    throw error instanceof Error ? error : new Error('Failed to create order');
+    console.error('Error creating order via API:', error);
+    throw error;
   }
 }
 

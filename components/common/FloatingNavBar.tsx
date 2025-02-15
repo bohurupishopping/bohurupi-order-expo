@@ -8,7 +8,7 @@ import { ThemedText } from '../ThemedText';
 
 const { width } = Dimensions.get('window');
 
-type AppRoute = '/' | '/orders' | '/firebase-pending' | '/firebase-completed';
+type AppRoute = '/' | '/orders' | '/firebase-pending' | '/firebase-completed' | '/create';
 
 interface NavItem {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -19,6 +19,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { icon: 'home', label: 'Home', route: '/' },
   { icon: 'shopping', label: 'Orders', route: '/orders' },
+  { icon: 'plus-circle', label: 'Create', route: '/create' },
   { icon: 'clock-outline', label: 'Pending', route: '/firebase-pending' },
   { icon: 'check-circle', label: 'Completed', route: '/firebase-completed' },
 ] as const;

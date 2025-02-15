@@ -36,8 +36,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="orders" />
           <Stack.Screen name="create" />
-          <Stack.Screen name="pending" />
-          <Stack.Screen name="done" />
+          <Stack.Screen name="firebase-pending" />
+          <Stack.Screen name="firebase-completed" />
           <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
         </Stack>
         <FloatingNavBar />

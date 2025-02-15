@@ -1,11 +1,13 @@
-import React, { useMemo, useRef, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Dimensions, Animated, Platform } from 'react-native';
+import React, { useMemo, useRef, useCallback, memo, useState } from 'react';
+import { View, StyleSheet, Pressable, Dimensions, Animated, Platform, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { format } from 'date-fns';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FirebaseOrder } from '@/types/firebase-order';
 import { formatDate } from '@/utils/date';
+import { OrderEditModal } from '../orders/OrderEditModal';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 380;
@@ -50,12 +52,13 @@ function getOrderStatusColor(status: string) {
 
 interface OrderRowProps {
   order: FirebaseOrder;
-  onPress: () => void;
-  onPressTracking: (trackingId: string) => void;
   index: number;
+  onPress: () => void;
+  onPressTracking?: (trackingId: string) => void;
+  onEdit: (order: FirebaseOrder) => void;
 }
 
-const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRowProps) => {
+const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: OrderRowProps) => {
   const colorScheme = useColorScheme();
   const statusColor = useMemo(() => getStatusColor(order.status), [order.status]);
   const orderStatusColor = useMemo(() => getOrderStatusColor(order.orderstatus), [order.orderstatus]);
@@ -82,7 +85,7 @@ const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRo
 
   const handleTrackingPress = useCallback(() => {
     if (order.trackingId) {
-      onPressTracking(order.trackingId);
+      onPressTracking?.(order.trackingId);
     }
   }, [order.trackingId, onPressTracking]);
 
@@ -192,22 +195,40 @@ const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRo
                   </ThemedText>
                 </View>
               </View>
-              {order.trackingId && (
+              <View style={styles.actionButtons}>
+                {order.trackingId && (
+                  <Pressable
+                    onPress={handleTrackingPress}
+                    style={({ pressed }) => [
+                      styles.actionButton,
+                      styles.trackingButton,
+                      { opacity: pressed ? 0.7 : 1 }
+                    ]}
+                    android_ripple={{ color: 'rgba(22, 163, 74, 0.1)' }}>
+                    <MaterialCommunityIcons
+                      name="truck-delivery"
+                      size={14}
+                      color="#16A34A"
+                    />
+                    <ThemedText style={styles.trackingText}>Track</ThemedText>
+                  </Pressable>
+                )}
                 <Pressable
-                  onPress={handleTrackingPress}
+                  onPress={() => onEdit(order)}
                   style={({ pressed }) => [
-                    styles.trackingButton,
+                    styles.actionButton,
+                    styles.editButton,
                     { opacity: pressed ? 0.7 : 1 }
                   ]}
-                  android_ripple={{ color: 'rgba(22, 163, 74, 0.1)' }}>
+                >
                   <MaterialCommunityIcons
-                    name="truck-delivery"
+                    name="pencil"
                     size={14}
-                    color="#16A34A"
+                    color="#8B5CF6"
                   />
-                  <ThemedText style={styles.trackingText}>Track</ThemedText>
+                  <ThemedText style={styles.editButtonText}>Edit</ThemedText>
                 </Pressable>
-              )}
+              </View>
             </View>
           </View>
         </View>
@@ -218,21 +239,29 @@ const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRo
 
 OrderRow.displayName = 'OrderRow';
 
-interface FirebaseOrdersTableProps {
+export interface FirebaseOrdersTableProps {
   orders: FirebaseOrder[];
-  onOrderPress: (order: FirebaseOrder) => void;
-  onTrackingPress: (trackingId: string) => void;
-  loading?: boolean;
+  loading: boolean;
+  onRefresh?: () => Promise<void>;
+  refreshing?: boolean;
+  onOrderPress?: (order: FirebaseOrder) => void;
+  onTrackingPress?: (trackingId: string) => void;
+  onEditSuccess?: () => Promise<void>;
 }
 
-export function FirebaseOrdersTable({
-  orders,
+export function FirebaseOrdersTable({ 
+  orders, 
+  loading, 
+  onRefresh, 
+  refreshing,
   onOrderPress,
   onTrackingPress,
-  loading
+  onEditSuccess
 }: FirebaseOrdersTableProps) {
   const colorScheme = useColorScheme();
   const emptyStateAnim = useRef(new Animated.Value(0)).current;
+  const [selectedOrder, setSelectedOrder] = useState<FirebaseOrder | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   React.useEffect(() => {
     if (orders.length === 0 && !loading) {
@@ -243,6 +272,25 @@ export function FirebaseOrdersTable({
       }).start();
     }
   }, [orders.length, loading]);
+
+  const handleEdit = useCallback((order: FirebaseOrder) => {
+    setSelectedOrder(order);
+    setIsEditModalOpen(true);
+  }, []);
+
+  const handleEditModalSuccess = useCallback(async () => {
+    setIsEditModalOpen(false);
+    setSelectedOrder(null);
+    await onEditSuccess?.();
+  }, [onEditSuccess]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </View>
+    );
+  }
 
   if (orders.length === 0 && !loading) {
     return (
@@ -281,21 +329,37 @@ export function FirebaseOrdersTable({
   }
 
   return (
-    <View style={styles.ordersList}>
-      {orders.map((order, index) => (
-        <OrderRow
-          key={order.id}
-          order={order}
-          index={index}
-          onPress={() => onOrderPress(order)}
-          onPressTracking={onTrackingPress}
-        />
-      ))}
-    </View>
+    <>
+      <View style={styles.ordersList}>
+        {orders.map((order, index) => (
+          <OrderRow
+            key={order.id}
+            order={order}
+            index={index}
+            onPress={() => onOrderPress?.(order)}
+            onPressTracking={onTrackingPress}
+            onEdit={handleEdit}
+          />
+        ))}
+      </View>
+
+      <OrderEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        selectedOrder={selectedOrder}
+        onSuccess={handleEditModalSuccess}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   ordersList: {
     padding: 16,
   },
@@ -372,18 +436,35 @@ const styles = StyleSheet.create({
     fontSize: isSmallScreen ? 11 : 12,
     opacity: 0.7,
   },
-  trackingButton: {
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
+  },
+  trackingButton: {
     backgroundColor: 'rgba(22, 163, 74, 0.1)',
+  },
+  editButton: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.2)',
   },
   trackingText: {
     fontSize: isSmallScreen ? 11 : 12,
     color: '#16A34A',
+    fontWeight: '600',
+  },
+  editButtonText: {
+    fontSize: isSmallScreen ? 11 : 12,
+    color: '#8B5CF6',
     fontWeight: '600',
   },
   emptyState: {
