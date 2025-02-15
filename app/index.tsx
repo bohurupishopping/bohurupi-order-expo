@@ -1,7 +1,7 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, Dimensions, Animated, RefreshControl, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -39,30 +39,24 @@ interface DashboardCardProps {
   color?: string;
 }
 
-function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: DashboardCardProps) {
-  const colorScheme = useColorScheme();
+function useFadeInAnimation(duration: number = 500, initialTranslateY: number = 20): { fadeAnim: Animated.Value; translateY: Animated.Value } {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-
+  const translateY = useRef(new Animated.Value(initialTranslateY)).current;
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration, useNativeDriver: true })
     ]).start();
-  }, []);
+  }, [fadeAnim, translateY, duration]);
+  return { fadeAnim, translateY };
+}
+
+function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: DashboardCardProps) {
+  const colorScheme = useColorScheme();
+  const { fadeAnim, translateY } = useFadeInAnimation();
 
   return (
-    <Animated.View style={[
-      { opacity: fadeAnim, transform: [{ translateY }] }
-    ]}>
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
       <Pressable
         style={({ pressed }) => [
           styles.card, 
@@ -75,8 +69,8 @@ function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: Dash
         ]}
       >
         <LinearGradient
-          colors={colorScheme === 'dark' 
-            ? ['rgba(31, 41, 55, 0.8)', 'rgba(31, 41, 55, 0.9)'] 
+          colors={colorScheme === 'dark'
+            ? ['rgba(31, 41, 55, 0.8)', 'rgba(31, 41, 55, 0.9)']
             : ['rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.9)']}
           style={styles.cardContent}
         >
@@ -104,28 +98,10 @@ function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: Dash
 
 function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentActivities'][0] }) {
   const colorScheme = useColorScheme();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  const { fadeAnim, translateY } = useFadeInAnimation();
 
   return (
-    <Animated.View style={[
-      { opacity: fadeAnim, transform: [{ translateY }] }
-    ]}>
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
       <Pressable
         style={({ pressed }) => [
           styles.activityCard,
@@ -138,12 +114,7 @@ function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentAc
         ]}
       >
         <View style={styles.activityHeader}>
-          <View style={[
-            styles.activityAvatar,
-            {
-              backgroundColor: colorScheme === 'dark' ? '#374151' : '#E2E8F0'
-            }
-          ]}>
+          <View style={[styles.activityAvatar, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#E2E8F0' }]}>
             <ThemedText>{activity.user.name[0]}</ThemedText>
           </View>
           <View style={styles.activityContent}>
@@ -170,18 +141,14 @@ export default function HomeScreen() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      // Fetch orders from both Firebase and WooCommerce
       const [firebaseOrders, wooOrders] = await Promise.all([
         fetchFirebaseOrders(),
         fetchLatestWooOrders(10),
       ]);
-
-      // Calculate metrics
       const totalRevenue = calculateTotalRevenue(firebaseOrders, wooOrders);
       const newOrders = countNewOrders(firebaseOrders, wooOrders);
       const activeOrders = countActiveOrders(firebaseOrders, wooOrders);
       const recentActivities = generateRecentActivities(firebaseOrders, wooOrders);
-
       setMetrics({
         totalRevenue,
         newOrders,
@@ -208,19 +175,14 @@ export default function HomeScreen() {
     <Animated.ScrollView
       style={[styles.container, { backgroundColor: '#F8FAFC' }]}
       showsVerticalScrollIndicator={false}
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: true }
-      )}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      scrollEventThrottle={16}>
-      <ThemedView style={styles.header}>
+      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      scrollEventThrottle={16}
+    >
+      <ThemedView style={[styles.header, { backgroundColor: 'transparent' }]}>
         <ThemedText type="title">Dashboard</ThemedText>
-        <ThemedText style={styles.date}>{format(new Date(), 'MMMM d, yyyy')}</ThemedText>
+        <ThemedText style={styles.date}>{format(new Date(2025, 1, 15), 'MMMM d, yyyy')}</ThemedText>
       </ThemedView>
-
       <View style={styles.cardsContainer}>
         <DashboardCard
           title="Total Revenue"
@@ -251,8 +213,7 @@ export default function HomeScreen() {
           color="#9C27B0"
         />
       </View>
-
-      <ThemedView style={styles.recentSection}>
+      <ThemedView style={[styles.recentSection, { backgroundColor: 'transparent' }]}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Recent Activities
         </ThemedText>
@@ -266,40 +227,28 @@ export default function HomeScreen() {
   );
 }
 
-// Helper functions
 function calculateTotalRevenue(firebaseOrders: FirebaseOrder[], wooOrders: TransformedOrder[]): number {
-  const firebaseRevenue = firebaseOrders.reduce((total, order) => {
-    return total + order.products.reduce((sum, product) => {
-      return sum + (product.sale_price * product.qty);
-    }, 0);
-  }, 0);
-
-  const wooRevenue = wooOrders.reduce((total, order) => {
-    return total + order.products.reduce((sum, product) => {
-      return sum + (product.sale_price * product.qty);
-    }, 0);
-  }, 0);
-
+  const firebaseRevenue = firebaseOrders.reduce((total, order) =>
+    total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0), 0);
+  const wooRevenue = wooOrders.reduce((total, order) =>
+    total + order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0), 0);
   return firebaseRevenue + wooRevenue;
 }
 
 function countNewOrders(firebaseOrders: FirebaseOrder[], wooOrders: TransformedOrder[]): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const newFirebaseOrders = firebaseOrders.filter(order => {
     if (!order.createdAt) return false;
     const orderDate = new Date(order.createdAt);
     return orderDate >= today;
   });
-
   return newFirebaseOrders.length + wooOrders.length;
 }
 
 function countActiveOrders(firebaseOrders: FirebaseOrder[], wooOrders: TransformedOrder[]): number {
   const pendingFirebaseOrders = firebaseOrders.filter(order => order.status === 'pending');
   const pendingWooOrders = wooOrders.filter(order => order.status === 'pending');
-
   return pendingFirebaseOrders.length + pendingWooOrders.length;
 }
 
@@ -309,40 +258,39 @@ function generateRecentActivities(firebaseOrders: FirebaseOrder[], wooOrders: Tr
       id: order.id || `firebase-${Date.now()}`,
       user: { name: order.customerName },
       action: `Ordered ${order.products.length} items`,
-      timestamp: format(new Date(order.createdAt || new Date()), 'MMM d, h:mm a'),
+      timestamp: format(new Date(order.createdAt || new Date()), 'MMM d, h:mm a')
     })),
     ...wooOrders.map(order => ({
       id: order.orderId || `woo-${Date.now()}`,
       user: { name: order.customerName },
       action: `Placed WooCommerce order`,
-      timestamp: format(new Date(), 'MMM d, h:mm a'),
-    })),
+      timestamp: format(new Date(), 'MMM d, h:mm a')
+    }))
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
    .slice(0, 10);
-
   return activities;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 10
   },
   header: {
     marginTop: 20,
-    marginBottom: 14,
+    marginBottom: 14
   },
   date: {
     opacity: 0.7,
     marginTop: 4,
-    fontSize: 14,
+    fontSize: 14
   },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     marginBottom: 12,
-    justifyContent: 'space-between',
+    justifyContent: 'space-between'
   },
   card: {
     width: cardWidth,
@@ -350,15 +298,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.1)',
+    borderColor: 'rgba(75, 85, 99, 0.1)'
   },
   cardContent: {
-    padding: 12,
+    padding: 12
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 8
   },
   iconContainer: {
     width: 32,
@@ -366,28 +314,28 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 8
   },
   cardTitle: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 13
   },
   cardValue: {
     fontSize: 18,
-    marginBottom: 4,
+    marginBottom: 4
   },
   cardSubtitle: {
     opacity: 0.7,
-    fontSize: 12,
+    fontSize: 12
   },
   recentSection: {
-    marginBottom: 16,
+    marginBottom: 16
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: 12
   },
   activitiesContainer: {
-    gap: 8,
+    gap: 8
   },
   activityCard: {
     padding: 12,
@@ -396,12 +344,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.1)',
+    borderColor: 'rgba(75, 85, 99, 0.1)'
   },
   activityHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    flex: 1
   },
   activityAvatar: {
     width: 36,
@@ -409,19 +357,19 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 12
   },
   activityContent: {
-    flex: 1,
+    flex: 1
   },
   activityAction: {
     opacity: 0.7,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 2
   },
   activityTime: {
     fontSize: 12,
     opacity: 0.7,
-    marginLeft: 8,
-  },
-}); 
+    marginLeft: 8
+  }
+});

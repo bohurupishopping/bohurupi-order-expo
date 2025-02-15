@@ -173,33 +173,20 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
     >
       <View style={styles.container}>
         <Animated.View style={[styles.backdrop, backdropStyle]}>
-          <Pressable style={styles.backdropPressable} onPress={handleDismiss} />
+          <Pressable style={styles.backdropPressable} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}} onPress={handleDismiss} />
         </Animated.View>
 
         <Animated.View style={[styles.modalContainer, modalStyle]}>
-          <View style={[
-            styles.modalContent,
-            { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF' }
-          ]}>
+          <View style={[styles.modalContent, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF' }]}>
             <View style={styles.dragHandle} />
 
-            <View style={[
-              styles.header,
-              {
-                backgroundColor: colorScheme === 'dark' 
-                  ? 'rgba(88, 28, 135, 0.1)' 
-                  : 'rgba(139, 92, 246, 0.1)'
-              }
-            ]}>
+            <View style={[styles.header, { backgroundColor: colorScheme === 'dark' ? 'rgba(88, 28, 135, 0.1)' : 'rgba(139, 92, 246, 0.1)' }]}>
               <Pressable
                 style={[
                   styles.closeButton,
-                  {
-                    backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(31, 41, 55, 0.8)' 
-                      : 'rgba(255, 255, 255, 0.8)'
-                  }
+                  { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)' }
                 ]}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                 onPress={handleDismiss}
               >
                 <MaterialCommunityIcons 
@@ -210,14 +197,7 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
               </Pressable>
 
               <View style={styles.headerContent}>
-                <View style={[
-                  styles.headerIconContainer,
-                  {
-                    backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(139, 92, 246, 0.2)' 
-                      : 'rgba(139, 92, 246, 0.1)'
-                  }
-                ]}>
+                <View style={[styles.headerIconContainer, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}>
                   <MaterialCommunityIcons
                     name="pencil"
                     size={20}
@@ -232,10 +212,7 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
 
             <View style={styles.formContent}>
               <FormField label="Order Status">
-                <View style={[
-                  styles.input,
-                  { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
-                ]}>
+                <View style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
                   <Picker
                     selectedValue={formData.status}
                     onValueChange={(value: string) => handleChange('status', value)}
@@ -248,10 +225,7 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
               </FormField>
 
               <FormField label="Payment Status">
-                <View style={[
-                  styles.input,
-                  { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
-                ]}>
+                <View style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
                   <Picker
                     selectedValue={formData.orderstatus}
                     onValueChange={(value: string) => handleChange('orderstatus', value)}
@@ -265,10 +239,7 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
 
               <FormField label="Tracking/AWB Number">
                 <TextInput
-                  style={[
-                    styles.input,
-                    { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
-                  ]}
+                  style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}
                   value={formData.trackingId}
                   onChangeText={(value) => handleChange('trackingId', value)}
                   placeholder="Enter tracking number"
@@ -278,10 +249,7 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
 
               <FormField label="Design URL">
                 <TextInput
-                  style={[
-                    styles.input,
-                    { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
-                  ]}
+                  style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}
                   value={formData.designUrl}
                   onChangeText={(value) => handleChange('designUrl', value)}
                   placeholder="Enter design URL"
@@ -371,9 +339,9 @@ const styles = StyleSheet.create({
     top: 16,
     left: 16,
     zIndex: 1,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -398,7 +366,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   formTitle: {
-    fontSize: isSmallScreen ? 16 : 18,
+    fontSize: isSmallScreen ? 18 : 20,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
@@ -410,21 +378,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 12,
-    marginBottom: 6,
+    fontSize: 14,
+    marginBottom: 8,
     color: '#6B7280',
     fontWeight: '500',
   },
   input: {
-    height: 42,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    height: 60,
+    paddingVertical: 12,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(139, 92, 246, 0.4)',
     justifyContent: 'center',
   },
   picker: {
-    height: 42,
+    height: 60,
     width: '100%',
   },
   footer: {
@@ -437,8 +406,8 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    height: 44,
-    borderRadius: 10,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -459,4 +428,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-}); 
+});
