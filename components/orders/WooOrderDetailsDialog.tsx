@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Modal, Pressable, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Modal, Pressable, Dimensions, Platform, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import Animated, { 
@@ -25,14 +25,93 @@ import {
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 380;
 
+interface WooLineItem {
+  id: number;
+  name: string;
+  quantity: number;
+  subtotal: string;
+  total: string;
+  sku: string;
+  meta_data: MetaData[];
+  image?: {
+    id?: number;
+    src?: string;
+    name?: string;
+    alt?: string;
+  };
+}
+
 interface WooOrderDetailsDialogProps {
   order: WooCommerceOrder | null;
   visible: boolean;
   onClose: () => void;
 }
 
+// Image Preview Modal Component
+function ImagePreviewModal({ 
+  visible, 
+  imageUrl, 
+  onClose 
+}: { 
+  visible: boolean; 
+  imageUrl: string; 
+  onClose: () => void; 
+}) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.3);
+
+  React.useEffect(() => {
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 200 });
+      scale.value = withSpring(1, {
+        damping: 20,
+        stiffness: 300
+      });
+    }
+  }, [visible]);
+
+  const handleClose = useCallback(() => {
+    opacity.value = withTiming(0, { duration: 200 });
+    scale.value = withSpring(0.3, {
+      damping: 20,
+      stiffness: 300
+    }, () => {
+      runOnJS(onClose)();
+    });
+  }, [onClose]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }]
+  }));
+
+  if (!visible) return null;
+
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      onRequestClose={handleClose}
+      animationType="none"
+    >
+      <Pressable 
+        style={styles.previewBackdrop}
+        onPress={handleClose}
+      >
+        <Animated.View style={[styles.previewImageContainer, animatedStyle]}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.previewImage}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // Enhanced OrderItem component
-function OrderItem({ item, currency, isLast }: { item: WooCommerceOrder['line_items'][0]; currency: string; isLast: boolean }) {
+function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: string; isLast: boolean }) {
   const colorScheme = useColorScheme();
   const variants = useMemo(() => getVariantBadges(item.meta_data), [item.meta_data]);
   const customization = useMemo(() => getCustomizationDetails(item.meta_data), [item.meta_data]);
@@ -43,63 +122,97 @@ function OrderItem({ item, currency, isLast }: { item: WooCommerceOrder['line_it
     [item.total, item.quantity]
   );
 
+  const [imageError, setImageError] = React.useState(false);
+  const [isPreviewVisible, setIsPreviewVisible] = React.useState(false);
+
+  const handleImagePress = useCallback(() => {
+    if (!imageError && item.image?.src) {
+      setIsPreviewVisible(true);
+    }
+  }, [imageError, item.image?.src]);
+
   return (
     <View style={[
       styles.orderItem,
       isLast && styles.lastOrderItem,
       { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
     ]}>
-      <View style={styles.itemHeader}>
-        <View style={styles.itemTitleContainer}>
-          <ThemedText type="defaultSemiBold" style={styles.itemName}>
-            {item.name}
-          </ThemedText>
-          <View style={styles.itemMetaContainer}>
-            <ThemedText style={styles.itemMeta}>SKU: {item.sku}</ThemedText>
-            <View style={styles.bulletPoint} />
-            <ThemedText style={styles.itemMeta}>Qty: {item.quantity}</ThemedText>
+      <View style={styles.itemRow}>
+        {/* Image */}
+        <Pressable 
+          style={[
+            styles.itemImageContainer,
+            !imageError && item.image?.src && styles.clickableImage
+          ]}
+          onPress={handleImagePress}
+        >
+          <Image
+            source={
+              imageError || !item.image?.src
+                ? require('@/assets/images/placeholder.png')
+                : { uri: item.image.src }
+            }
+            style={styles.itemImage}
+            onError={() => setImageError(true)}
+            resizeMode="cover"
+          />
+        </Pressable>
+
+        {/* Product Details */}
+        <View style={styles.itemMainContent}>
+          <View style={styles.itemTitleRow}>
+            <ThemedText type="defaultSemiBold" style={styles.itemName} numberOfLines={1}>
+              {item.name}
+            </ThemedText>
+            <ThemedText style={styles.itemPrice}>
+              {currency} {itemTotal}
+            </ThemedText>
+          </View>
+
+          <View style={styles.itemMetaRow}>
+            <View style={styles.skuContainer}>
+              <ThemedText style={styles.itemMeta}>SKU: {item.sku}</ThemedText>
+              <View style={styles.bulletPoint} />
+              <ThemedText style={styles.itemMeta}>Qty: {item.quantity}</ThemedText>
+            </View>
+
+            {variants.length > 0 && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.variantsScroll}
+                contentContainerStyle={styles.variantsScrollContent}
+              >
+                {variants.map((variant, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.variantBadge,
+                      idx !== variants.length - 1 && styles.variantBadgeMargin,
+                      {
+                        backgroundColor: colorScheme === 'dark'
+                          ? variant.type === 'full-sleeve'
+                            ? 'rgba(217, 70, 239, 0.2)'
+                            : variant.type === 'children'
+                              ? 'rgba(236, 72, 153, 0.2)'
+                              : 'rgba(139, 92, 246, 0.2)'
+                          : variant.type === 'full-sleeve'
+                            ? 'rgba(217, 70, 239, 0.1)'
+                            : variant.type === 'children'
+                              ? 'rgba(236, 72, 153, 0.1)'
+                              : 'rgba(139, 92, 246, 0.1)'
+                      }
+                    ]}>
+                    <ThemedText style={styles.variantText}>
+                      {variant.label}: {variant.value}
+                    </ThemedText>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
           </View>
         </View>
-        <View style={styles.itemPriceContainer}>
-          <ThemedText style={styles.itemPrice}>
-            {currency} {itemTotal}
-          </ThemedText>
-          {item.quantity > 1 && (
-            <ThemedText style={styles.itemUnitPrice}>
-              {currency} {itemUnitPrice} each
-            </ThemedText>
-          )}
-        </View>
       </View>
-
-      {variants.length > 0 && (
-        <View style={styles.variantsContainer}>
-          {variants.map((variant, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.variantBadge,
-                {
-                  backgroundColor: colorScheme === 'dark'
-                    ? variant.type === 'full-sleeve'
-                      ? 'rgba(217, 70, 239, 0.2)'
-                      : variant.type === 'children'
-                        ? 'rgba(236, 72, 153, 0.2)'
-                        : 'rgba(139, 92, 246, 0.2)'
-                    : variant.type === 'full-sleeve'
-                      ? 'rgba(217, 70, 239, 0.1)'
-                      : variant.type === 'children'
-                        ? 'rgba(236, 72, 153, 0.1)'
-                        : 'rgba(139, 92, 246, 0.1)'
-                }
-              ]}>
-              <ThemedText style={styles.variantText}>
-                {variant.label}: {variant.value}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
 
       {customization.length > 0 && (
         <View style={[
@@ -145,6 +258,15 @@ function OrderItem({ item, currency, isLast }: { item: WooCommerceOrder['line_it
             </Pressable>
           )}
         </View>
+      )}
+
+      {/* Image Preview Modal */}
+      {item.image?.src && (
+        <ImagePreviewModal
+          visible={isPreviewVisible}
+          imageUrl={item.image.src}
+          onClose={() => setIsPreviewVisible(false)}
+        />
       )}
     </View>
   );
@@ -676,29 +798,56 @@ const styles = StyleSheet.create({
     height: 32,
   },
   orderItem: {
-    marginBottom: 16,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(75, 85, 99, 0.2)',
+    marginBottom: 8,
   },
   lastOrderItem: {
     marginBottom: 0,
   },
-  itemHeader: {
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginRight: 12,
+    backgroundColor: 'rgba(75, 85, 99, 0.1)',
+  },
+  itemImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+  itemMainContent: {
+    flex: 1,
+  },
+  itemTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  itemTitleContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  itemName: {
-    fontSize: isSmallScreen ? 14 : 15,
+    alignItems: 'center',
     marginBottom: 4,
   },
-  itemMetaContainer: {
+  itemName: {
+    fontSize: isSmallScreen ? 13 : 14,
+    flex: 1,
+    marginRight: 8,
+  },
+  itemPrice: {
+    fontSize: isSmallScreen ? 14 : 15,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  itemMetaRow: {
+    flexDirection: 'column',
+    gap: 4,
+  },
+  skuContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -713,38 +862,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(75, 85, 99, 0.5)',
     marginHorizontal: 6,
   },
-  itemPriceContainer: {
-    alignItems: 'flex-end',
+  variantsScroll: {
+    marginTop: 4,
   },
-  itemPrice: {
-    fontSize: isSmallScreen ? 15 : 16,
-    fontWeight: '600',
-    color: '#8B5CF6',
-  },
-  itemUnitPrice: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
-    marginTop: 2,
-  },
-  variantsContainer: {
+  variantsScrollContent: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
   },
   variantBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
+  },
+  variantBadgeMargin: {
+    marginRight: 6,
   },
   variantText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 10 : 11,
     fontWeight: '500',
   },
   customizationContainer: {
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
+    marginTop: 8,
   },
   customizationTitle: {
     fontSize: isSmallScreen ? 13 : 14,
@@ -780,5 +919,25 @@ const styles = StyleSheet.create({
     fontSize: isSmallScreen ? 11 : 12,
     marginLeft: 6,
     fontWeight: '500',
+  },
+  previewBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewImageContainer: {
+    width: width * 0.9,
+    height: height * 0.6,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  clickableImage: {
+    cursor: 'pointer',
   },
 }); 
