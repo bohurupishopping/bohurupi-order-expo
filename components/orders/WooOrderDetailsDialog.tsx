@@ -47,7 +47,7 @@ interface WooOrderDetailsDialogProps {
   onClose: () => void;
 }
 
-// Image Preview Modal Component
+// --- Image Preview Modal Component ---
 function ImagePreviewModal({ 
   visible, 
   imageUrl, 
@@ -104,13 +104,20 @@ function ImagePreviewModal({
             style={styles.previewImage}
             resizeMode="contain"
           />
+          {/* Close Button for Image Preview */}
+          <Pressable
+              style={styles.previewCloseButton}
+              onPress={handleClose}
+            >
+              <MaterialCommunityIcons name="close" size={24} color="white" />
+          </Pressable>
         </Animated.View>
       </Pressable>
     </Modal>
   );
 }
 
-// Enhanced OrderItem component
+// --- Enhanced OrderItem component ---
 function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: string; isLast: boolean }) {
   const colorScheme = useColorScheme();
   const variants = useMemo(() => getVariantBadges(item.meta_data), [item.meta_data]);
@@ -131,11 +138,18 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
     }
   }, [imageError, item.image?.src]);
 
+  const handleLinkPress = useCallback((url: string) => {
+    // Implement your navigation or linking logic here
+    // For example, using Linking from react-native:
+    // Linking.openURL(url);
+  }, []);
+
+
   return (
     <View style={[
       styles.orderItem,
       isLast && styles.lastOrderItem,
-      { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
+      { backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.7)' : 'rgba(255, 255, 255, 0.8)' }
     ]}>
       <View style={styles.itemRow}>
         {/* Image */}
@@ -161,7 +175,7 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
         {/* Product Details */}
         <View style={styles.itemMainContent}>
           <View style={styles.itemTitleRow}>
-            <ThemedText type="defaultSemiBold" style={styles.itemName} numberOfLines={1}>
+            <ThemedText type="defaultSemiBold" style={styles.itemName} numberOfLines={2}> {/* Increased numberOfLines */}
               {item.name}
             </ThemedText>
             <ThemedText style={styles.itemPrice}>
@@ -174,6 +188,10 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
               <ThemedText style={styles.itemMeta}>SKU: {item.sku}</ThemedText>
               <View style={styles.bulletPoint} />
               <ThemedText style={styles.itemMeta}>Qty: {item.quantity}</ThemedText>
+              <View style={styles.bulletPoint} />
+                <ThemedText style={styles.itemMeta}>
+                 Unit Price: {currency} {itemUnitPrice}
+                </ThemedText>
             </View>
 
             {variants.length > 0 && (
@@ -192,15 +210,15 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
                       {
                         backgroundColor: colorScheme === 'dark'
                           ? variant.type === 'full-sleeve'
+                            ? 'rgba(217, 70, 239, 0.3)'  // Increased opacity
+                            : variant.type === 'children'
+                              ? 'rgba(236, 72, 153, 0.3)'  // Increased opacity
+                              : 'rgba(139, 92, 246, 0.3)'  // Increased opacity
+                          : variant.type === 'full-sleeve'
                             ? 'rgba(217, 70, 239, 0.2)'
                             : variant.type === 'children'
                               ? 'rgba(236, 72, 153, 0.2)'
                               : 'rgba(139, 92, 246, 0.2)'
-                          : variant.type === 'full-sleeve'
-                            ? 'rgba(217, 70, 239, 0.1)'
-                            : variant.type === 'children'
-                              ? 'rgba(236, 72, 153, 0.1)'
-                              : 'rgba(139, 92, 246, 0.1)'
                       }
                     ]}>
                     <ThemedText style={styles.variantText}>
@@ -219,8 +237,8 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
           styles.customizationContainer,
           {
             backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(139, 92, 246, 0.1)'
-              : 'rgba(139, 92, 246, 0.05)'
+              ? 'rgba(139, 92, 246, 0.2)'  // Increased opacity
+              : 'rgba(139, 92, 246, 0.1)'  // Increased opacity
           }
         ]}>
           <ThemedText type="defaultSemiBold" style={styles.customizationTitle}>
@@ -239,22 +257,20 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
         <View style={styles.linksContainer}>
           {productUrl && (
             <Pressable
-              style={[styles.linkButton, { marginRight: 8 }]}
-              onPress={() => {}}>
-              <MaterialCommunityIcons name="link" size={16} color="#8B5CF6" />
-              <ThemedText style={[styles.linkText, { color: '#8B5CF6' }]}>
-                View Product
-              </ThemedText>
+              style={[styles.linkButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)' }]}
+              onPress={() => handleLinkPress(productUrl)}
+            >
+              <MaterialCommunityIcons name="link-variant" size={18} color="#8B5CF6" />
+              <ThemedText style={[styles.linkText, { color: '#8B5CF6' }]}>View</ThemedText>
             </Pressable>
           )}
           {downloadUrl && (
             <Pressable
-              style={styles.linkButton}
-              onPress={() => {}}>
-              <MaterialCommunityIcons name="download" size={16} color="#8B5CF6" />
-              <ThemedText style={[styles.linkText, { color: '#8B5CF6' }]}>
-                Download Design
-              </ThemedText>
+              style={[styles.linkButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)' }]}
+              onPress={() => handleLinkPress(downloadUrl)}
+            >
+              <MaterialCommunityIcons name="download-outline" size={18} color="#8B5CF6" />
+              <ThemedText style={[styles.linkText, { color: '#8B5CF6' }]}>Download</ThemedText>
             </Pressable>
           )}
         </View>
@@ -272,6 +288,7 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
   );
 }
 
+// --- Section Component ---
 function Section({
   title,
   icon,
@@ -290,10 +307,10 @@ function Section({
   return (
     <View style={[styles.section, containerStyle]}>
       <View style={styles.sectionHeader}>
-        <View style={[styles.sectionIcon, { backgroundColor: `${color}15` }]}>
+        <View style={[styles.sectionIcon, { backgroundColor: `${color}20` }]}> {/* Increased opacity */}
           <MaterialCommunityIcons
             name={icon}
-            size={18}
+            size={20} // Slightly larger icon
             color={color}
           />
         </View>
@@ -304,8 +321,8 @@ function Section({
       <View style={[
         styles.sectionContent,
         {
-          backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)',
-          borderColor: colorScheme === 'dark' ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.8)'
+          backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          borderColor: colorScheme === 'dark' ? 'rgba(107, 114, 128, 0.6)' : 'rgba(209, 213, 219, 0.8)'
         }
       ]}>
         {children}
@@ -314,6 +331,7 @@ function Section({
   );
 }
 
+// --- AddressDetails Component ---
 function AddressDetails({ address }: { address: WooCommerceOrder['billing'] | WooCommerceOrder['shipping'] }) {
   return (
     <View style={styles.addressContainer}>
@@ -332,6 +350,7 @@ function AddressDetails({ address }: { address: WooCommerceOrder['billing'] | Wo
   );
 }
 
+// --- SummaryRow Component ---
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.summaryRow}>
@@ -341,6 +360,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+// --- Main Dialog Component ---
 export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetailsDialogProps) {
   const colorScheme = useColorScheme();
   const translateY = useSharedValue(height);
@@ -348,11 +368,11 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
 
   const handleDismiss = useCallback(() => {
     translateY.value = withSpring(height, {
-      damping: 15,
-      stiffness: 150
+      damping: 20, // Increased damping
+      stiffness: 200, // Increased stiffness
     });
     opacity.value = withTiming(0, {
-      duration: 200
+      duration: 150 // Faster transition
     }, () => {
       runOnJS(onClose)();
     });
@@ -360,10 +380,10 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
 
   React.useEffect(() => {
     if (visible) {
-      opacity.value = withTiming(1, { duration: 200 });
+      opacity.value = withTiming(1, { duration: 150 }); // Faster transition
       translateY.value = withSpring(0, {
-        damping: 15,
-        stiffness: 150
+        damping: 20, // Increased damping
+        stiffness: 200, // Increased stiffness
       });
     }
   }, [visible]);
@@ -395,10 +415,8 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
 
         <Animated.View style={[styles.modalContainer, modalStyle]}>
           <View style={[
-            styles.modalContent,
-            {
-              backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF'
-            }
+            styles.sheetContainer,
+            { backgroundColor: colorScheme === 'dark' ? '#2D3748' : '#FFFFFF' }
           ]}>
             <View style={styles.dragHandle} />
 
@@ -406,8 +424,8 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
               styles.header,
               {
                 backgroundColor: colorScheme === 'dark' 
-                  ? 'rgba(88, 28, 135, 0.1)' 
-                  : 'rgba(139, 92, 246, 0.1)'
+                  ? 'rgba(168, 85, 247, 0.2)'
+                  : 'rgba(168, 85, 247, 0.1)'
               }
             ]}>
               <Pressable
@@ -415,13 +433,13 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                   styles.closeButton,
                   {
                     backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(31, 41, 55, 0.8)' 
-                      : 'rgba(255, 255, 255, 0.8)'
+                      ? 'rgba(45, 55, 72, 0.8)'
+                      : 'rgba(249, 250, 251, 0.9)'
                   }
                 ]}
                 onPress={handleDismiss}>
                 <MaterialCommunityIcons 
-                  name="arrow-left"
+                  name="close" // Changed to close icon
                   size={24}
                   color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'}
                 />
@@ -432,13 +450,13 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                   styles.headerIconContainer,
                   {
                     backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(139, 92, 246, 0.2)' 
-                      : 'rgba(139, 92, 246, 0.1)'
+                      ? 'rgba(139, 92, 246, 0.3)'  // Increased opacity
+                      : 'rgba(139, 92, 246, 0.2)'  // Increased opacity
                   }
                 ]}>
                   <MaterialCommunityIcons
-                    name="package-variant"
-                    size={20}
+                    name="package-variant-closed" // More specific icon
+                    size={22} // Slightly larger icon
                     color="#8B5CF6"
                   />
                 </View>
@@ -451,7 +469,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                 <View style={styles.dateContainer}>
                   <MaterialCommunityIcons
                     name="calendar"
-                    size={14}
+                    size={16} // Slightly larger icon
                     color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
                   />
                   <ThemedText style={styles.date}>
@@ -473,7 +491,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
               bounces={true}>
               <Section
                 title="Order Products"
-                icon="package-variant"
+                icon="package-variant-closed" // More specific icon
                 color="#8B5CF6">
                 {order.line_items.map((item, index) => (
                   <OrderItem
@@ -491,7 +509,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                 <View style={styles.column}>
                   <Section
                     title="Billing Address"
-                    icon="map-marker"
+                    icon="card-account-details-outline" // More specific icon
                     color="#EC4899"
                     containerStyle={styles.addressSection}>
                     <AddressDetails address={order.billing} />
@@ -500,7 +518,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                 <View style={styles.column}>
                   <Section
                     title="Shipping Address"
-                    icon="truck-delivery"
+                    icon="truck-delivery-outline" // More specific icon
                     color="#6366F1"
                     containerStyle={styles.addressSection}>
                     <AddressDetails address={order.shipping} />
@@ -512,7 +530,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
 
               <Section
                 title="Order Summary"
-                icon="receipt"
+                icon="script-text-outline"
                 color="#F59E0B">
                 <View style={styles.summaryContent}>
                   <SummaryRow
@@ -544,7 +562,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
 
               <Section
                 title="Payment Method"
-                icon="credit-card"
+                icon="credit-card-outline" // More specific icon
                 color="#10B981">
                 <View style={styles.paymentContent}>
                   <View style={styles.paymentRow}>
@@ -571,7 +589,7 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
               {order.customer_note && (
                 <Section
                   title="Customer Note"
-                  icon="note-text"
+                  icon="note-text-outline" // More specific icon
                   color="#3B82F6">
                   <ThemedText style={styles.customerNote}>
                     {order.customer_note}
@@ -595,7 +613,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Slightly darker backdrop
   },
   backdropPressable: {
     flex: 1,
@@ -604,85 +622,78 @@ const styles = StyleSheet.create({
     height: '95%',
     backgroundColor: 'transparent',
   },
-  modalContent: {
+  sheetContainer: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
     overflow: 'hidden',
   },
   dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: 'rgba(156, 163, 175, 0.4)',
-    borderRadius: 2,
+    width: 50, // Wider handle
+    height: 5,
+    backgroundColor: 'rgba(156, 163, 175, 0.6)', // Slightly more opaque
+    borderRadius: 2.5,
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 10, // Increased margin
+    marginBottom: 8,
   },
   header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(75, 85, 99, 0.2)',
+    padding: 18, // Increased padding
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 18, // Align with header padding
+    left: 18,
     zIndex: 1,
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    paddingTop: 4,
+    marginBottom: 10, // Increased margin
+    paddingTop: 6,
   },
   headerIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40, // Slightly larger
+    height: 40,
+    borderRadius: 12, // Increased radius
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   orderNumber: {
-    fontSize: isSmallScreen ? 16 : 18,
-    fontWeight: '600',
+    fontSize: isSmallScreen ? 17 : 19,
+    fontWeight: '700', // Bolder
     letterSpacing: 0.5,
   },
   headerMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 16, // Increased gap
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5, // Increased gap
   },
   date: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
+    fontSize: isSmallScreen ? 12 : 13,
+    opacity: 0.75, // Slightly more opaque
     letterSpacing: 0.2,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 12, // Increased padding
+    paddingVertical: 5,
+    borderRadius: 15, // Increased radius
   },
   statusText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 12 : 13,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
@@ -690,41 +701,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   section: {
-    padding: 16,
+    padding: 18, // Increased padding
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14, // Increased margin
   },
   sectionIcon: {
-    width: isSmallScreen ? 32 : 36,
-    height: isSmallScreen ? 32 : 36,
-    borderRadius: 10,
+    width: isSmallScreen ? 34 : 38, // Slightly larger
+    height: isSmallScreen ? 34 : 38,
+    borderRadius: 12, // Increased radius
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   sectionTitle: {
-    fontSize: isSmallScreen ? 15 : 16,
+    fontSize: isSmallScreen ? 16 : 17, // Increased font size
     fontWeight: '600',
     letterSpacing: 0.3,
   },
   sectionContent: {
-    borderRadius: 12,
+    borderRadius: 15, // Increased radius
     overflow: 'hidden',
-    borderWidth: 1,
   },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(75, 85, 99, 0.2)',
-    marginHorizontal: 16,
-    marginVertical: 8,
+    backgroundColor: 'rgba(75, 85, 99, 0.3)', // Slightly more opaque
+    marginHorizontal: 18, // Increased margin
+    marginVertical: 10, // Increased margin
   },
   twoColumnSection: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
+    gap: 14, // Increased gap
+    paddingHorizontal: 18, // Increased margin
   },
   column: {
     flex: 1,
@@ -733,26 +743,27 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   addressContainer: {
-    padding: 16,
+    padding: 18, // Increased padding
   },
   addressName: {
-    marginBottom: 8,
+    marginBottom: 10, // Increased margin
+    fontSize: isSmallScreen ? 14 : 15,
   },
   addressText: {
     fontSize: isSmallScreen ? 13 : 14,
-    lineHeight: 20,
+    lineHeight: 22, // Increased line height
     opacity: 0.8,
   },
   summaryContent: {
-    padding: 16,
+    padding: 18, // Increased padding
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10, // Increased margin
   },
   summaryLabel: {
-    opacity: 0.7,
+    opacity: 0.75, // Slightly more opaque
     fontSize: isSmallScreen ? 13 : 14,
   },
   summaryValue: {
@@ -762,27 +773,27 @@ const styles = StyleSheet.create({
   totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(75, 85, 99, 0.2)',
+    marginTop: 14, // Increased margin
+    paddingTop: 14,
   },
   totalLabel: {
-    fontSize: isSmallScreen ? 15 : 16,
+    fontSize: isSmallScreen ? 16 : 17,
+    fontWeight: '700',
   },
   totalValue: {
-    fontSize: isSmallScreen ? 15 : 16,
+    fontSize: isSmallScreen ? 16 : 17,
+    fontWeight: '700',
   },
   paymentContent: {
-    padding: 16,
+    padding: 18, // Increased padding
   },
   paymentRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 10, // Increased margin
   },
   paymentLabel: {
-    width: 120,
-    opacity: 0.7,
+    width: 130, // Increased width
+    opacity: 0.75, // Slightly more opaque
     fontSize: isSmallScreen ? 13 : 14,
   },
   paymentValue: {
@@ -791,18 +802,16 @@ const styles = StyleSheet.create({
     fontSize: isSmallScreen ? 13 : 14,
   },
   customerNote: {
-    padding: 16,
-    lineHeight: 20,
+    padding: 18, // Increased padding
+    lineHeight: 22, // Increased line height
   },
   bottomSpacing: {
-    height: 32,
+    height: 36, // Increased spacing
   },
   orderItem: {
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-    marginBottom: 8,
+    padding: 14, // Increased padding
+    borderRadius: 15, // Increased radius
+    marginBottom: 10, // Increased margin
   },
   lastOrderItem: {
     marginBottom: 0,
@@ -812,11 +821,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemImageContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: 65, // Slightly larger
+    height: 65,
+    borderRadius: 10, // Increased radius
     overflow: 'hidden',
-    marginRight: 12,
+    marginRight: 14, // Increased margin
     backgroundColor: 'rgba(75, 85, 99, 0.1)',
   },
   itemImage: {
@@ -831,111 +840,134 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 5, // Increased margin
   },
   itemName: {
-    fontSize: isSmallScreen ? 13 : 14,
+    fontSize: isSmallScreen ? 14 : 15,
     flex: 1,
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   itemPrice: {
-    fontSize: isSmallScreen ? 14 : 15,
-    fontWeight: '600',
+    fontSize: isSmallScreen ? 15 : 16,
+    fontWeight: '700', // Bolder
     color: '#8B5CF6',
   },
   itemMetaRow: {
     flexDirection: 'column',
-    gap: 4,
+    gap: 5, // Increased gap
   },
   skuContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   itemMeta: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
+    fontSize: isSmallScreen ? 12 : 13,
+    opacity: 0.75, // Slightly more opaque
   },
   bulletPoint: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(75, 85, 99, 0.5)',
-    marginHorizontal: 6,
+    width: 4, // Slightly larger
+    height: 4,
+    borderRadius: 2, // Increased radius
+    backgroundColor: 'rgba(75, 85, 99, 0.6)', // Slightly more opaque
+    marginHorizontal: 8, // Increased margin
   },
   variantsScroll: {
-    marginTop: 4,
+    marginTop: 6, // Increased margin
   },
   variantsScrollContent: {
     flexDirection: 'row',
   },
   variantBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10, // Increased padding
+    paddingVertical: 5,
+    borderRadius: 10, // Increased radius
   },
   variantBadgeMargin: {
-    marginRight: 6,
+    marginRight: 8, // Increased margin
   },
   variantText: {
-    fontSize: isSmallScreen ? 10 : 11,
-    fontWeight: '500',
+    fontSize: isSmallScreen ? 11 : 12,
+    fontWeight: '600', // Bolder
+    color: '#4B5563'
   },
   customizationContainer: {
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
+    borderRadius: 10, // Increased radius
+    padding: 14, // Increased padding
+    marginTop: 10, // Increased margin
   },
   customizationTitle: {
-    fontSize: isSmallScreen ? 13 : 14,
-    marginBottom: 8,
+    fontSize: isSmallScreen ? 14 : 15,
+    marginBottom: 10, // Increased margin
     color: '#8B5CF6',
   },
   customizationRow: {
     flexDirection: 'row',
-    marginBottom: 4,
+    marginBottom: 5, // Increased margin
   },
   customizationLabel: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
-    width: 100,
+    fontSize: isSmallScreen ? 12 : 13,
+    opacity: 0.75, // Slightly more opaque
+    width: 110, // Increased width
   },
   customizationValue: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 12 : 13,
     flex: 1,
   },
   linksContainer: {
     flexDirection: 'row',
-    marginTop: 8,
+    marginTop: 12, // Increased margin
+    gap: 10, // Added gap for spacing
   },
   linkButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    paddingHorizontal: 12,
+    justifyContent: 'center', // Center content
+    paddingHorizontal: 12, // Increased padding
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10, // Increased radius
+    // Added a subtle shadow for depth (optional, but improves look)
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2, // For Android shadow
   },
   linkText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 12 : 13,
     marginLeft: 6,
-    fontWeight: '500',
+    fontWeight: '600', // Make the text bolder
   },
   previewBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Darker backdrop
     justifyContent: 'center',
     alignItems: 'center',
   },
   previewImageContainer: {
     width: width * 0.9,
     height: height * 0.6,
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    overflow: 'hidden',
+    backgroundColor: 'transparent', // Ensure transparency
+    borderRadius: 15, // Increased radius
+    overflow: 'hidden', // Ensure image corners are rounded
+     // Add shadow for a "lifted" effect
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   previewImage: {
     width: '100%',
     height: '100%',
+  },
+    previewCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    borderRadius: 20, // Fully rounded
+    padding: 5, // Padding around the icon
+    zIndex: 2 //make sure close is above image
   },
   clickableImage: {
     cursor: 'pointer',

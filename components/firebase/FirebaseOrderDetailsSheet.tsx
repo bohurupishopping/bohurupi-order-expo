@@ -58,14 +58,14 @@ const ProductCard = memo(({ product, colorScheme }: {
   return (
     <View style={[
       styles.productCard,
-      { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }
+      { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.7)' : 'rgba(255, 255, 255, 0.8)' },
     ]}>
       <View style={styles.productContent}>
         {product.image && (
-          <Pressable 
+          <Pressable
             style={[
               styles.productImageContainer,
-              !imageError && product.image && styles.clickableImage
+              !imageError && product.image && styles.clickableImage,
             ]}
             onPress={handleImagePress}
           >
@@ -91,8 +91,8 @@ const ProductCard = memo(({ product, colorScheme }: {
               <ThemedText style={styles.metaText}>Qty: {product.qty}</ThemedText>
             </View>
             {(product.colour || product.size) && (
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.variantsScroll}
                 contentContainerStyle={styles.variantsScrollContent}
@@ -100,7 +100,7 @@ const ProductCard = memo(({ product, colorScheme }: {
                 {product.colour && (
                   <View style={[
                     styles.variantBadge,
-                    { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }
+                    { backgroundColor: colorScheme === 'dark' ? 'rgba(159, 122, 234, 0.3)' : 'rgba(159, 122, 234, 0.2)' }
                   ]}>
                     <ThemedText style={styles.variantText}>{product.colour}</ThemedText>
                   </View>
@@ -108,7 +108,7 @@ const ProductCard = memo(({ product, colorScheme }: {
                 {product.size && (
                   <View style={[
                     styles.variantBadge,
-                    { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' },
+                    { backgroundColor: colorScheme === 'dark' ? 'rgba(159, 122, 234, 0.3)' : 'rgba(159, 122, 234, 0.2)' },
                     product.colour && styles.variantBadgeMargin
                   ]}>
                     <ThemedText style={styles.variantText}>{product.size}</ThemedText>
@@ -119,11 +119,11 @@ const ProductCard = memo(({ product, colorScheme }: {
           </View>
           {product.downloaddesign && (
             <View style={styles.productActions}>
-              <Pressable
-                style={[styles.actionButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }]}
+               <Pressable
+                style={[styles.actionButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}
                 onPress={handleDesignPress}
-                android_ripple={{ color: 'rgba(139, 92, 246, 0.1)' }}>
-                <MaterialCommunityIcons name="download" size={14} color="#8B5CF6" />
+                android_ripple={{ color: 'rgba(139, 92, 246, 0.2)' }}>
+                <MaterialCommunityIcons name="download-outline" size={16} color="#8B5CF6" />
                 <ThemedText style={[styles.actionButtonText, { color: '#8B5CF6' }]}>Download</ThemedText>
               </Pressable>
             </View>
@@ -139,7 +139,7 @@ const ProductCard = memo(({ product, colorScheme }: {
           onRequestClose={() => setIsPreviewVisible(false)}
           animationType="fade"
         >
-          <Pressable 
+          <Pressable
             style={styles.previewBackdrop}
             onPress={() => setIsPreviewVisible(false)}
           >
@@ -171,22 +171,22 @@ export const FirebaseOrderDetailsSheet = memo(({
 
   const handleDismiss = useCallback(() => {
     translateY.value = withSpring(height, {
-      damping: 15,
-      stiffness: 150,
-      mass: 0.5
+      damping: 20, // Increased damping for a slightly bouncier feel
+      stiffness: 200, // Increased stiffness
+      mass: 0.7 // Increased mass slightly
     });
-    opacity.value = withTiming(0, { duration: 150 }, () => {
+    opacity.value = withTiming(0, { duration: 200 }, () => { // Faster fade-out
       runOnJS(onClose)();
     });
   }, [onClose]);
 
   React.useEffect(() => {
     if (visible) {
-      opacity.value = withTiming(1, { duration: 150 });
+      opacity.value = withTiming(1, { duration: 200 }); // Faster fade-in
       translateY.value = withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-        mass: 0.5
+        damping: 20, // Increased damping
+        stiffness: 200, // Increased stiffness
+        mass: 0.7 // Increased mass
       });
     }
   }, [visible]);
@@ -201,7 +201,7 @@ export const FirebaseOrderDetailsSheet = memo(({
 
   const handleTrackingPress = useCallback(() => {
     if (order?.trackingId) {
-      Linking.openURL(getTrackingUrl(order.trackingId));
+       Linking.openURL(getTrackingUrl(order.trackingId));
     }
   }, [order?.trackingId]);
 
@@ -225,30 +225,40 @@ export const FirebaseOrderDetailsSheet = memo(({
         </Animated.View>
 
         <Animated.View style={[styles.modalContainer, modalStyle]}>
-          <View style={[styles.sheetContainer, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF' }]}>
-            <View style={styles.dragHandle} />
+          <View style={[styles.sheetContainer, { backgroundColor: colorScheme === 'dark' ? '#1E293B' : '#E5E7EB' }]}>
+             <View style={styles.dragHandle} />
 
-            <View style={[styles.header, { backgroundColor: colorScheme === 'dark' ? 'rgba(88, 28, 135, 0.1)' : 'rgba(139, 92, 246, 0.1)' }]}>
+            <View style={[
+              styles.header,
+              {
+                backgroundColor: '#dff2ef',
+              }
+            ]}>
               <Pressable
-                style={[styles.closeButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)' }]}
-                onPress={handleDismiss}>
-                <MaterialCommunityIcons name="arrow-left" size={24} color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'} />
+                style={[
+                  styles.closeButton,
+                ]}
+                onPress={handleDismiss}
+                >
+                <MaterialCommunityIcons name="close" size={24} color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'} />
               </Pressable>
 
               <View style={styles.headerContent}>
-                <View style={[styles.headerIconContainer, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}>
-                  <MaterialCommunityIcons name="package-variant" size={20} color="#8B5CF6" />
+                <View style={[
+                    styles.headerIconContainer,
+                  ]}>
+                  <MaterialCommunityIcons name="package-variant-closed" size={24} color="#8B5CF6" />
                 </View>
                 <ThemedText type="title" style={styles.orderTitle}>Order #{order.orderId}</ThemedText>
               </View>
 
               <View style={styles.headerMeta}>
                 <View style={styles.customerInfo}>
-                  <MaterialCommunityIcons name="account" size={14} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+                  <MaterialCommunityIcons name="account-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
                   <ThemedText style={styles.customerName}>{order.customerName}</ThemedText>
                 </View>
                 <View style={styles.dateInfo}>
-                  <MaterialCommunityIcons name="clock-outline" size={14} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+                  <MaterialCommunityIcons name="clock-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
                   <ThemedText style={styles.date}>{formatDate(order.createdAt)}</ThemedText>
                 </View>
               </View>
@@ -259,7 +269,8 @@ export const FirebaseOrderDetailsSheet = memo(({
               showsVerticalScrollIndicator={false}
               bounces={Platform.OS === 'ios'}
               overScrollMode="never"
-              removeClippedSubviews={true}>
+              removeClippedSubviews={true}
+              >
               <View style={styles.section}>
                 <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Order Products</ThemedText>
                 <View style={styles.productsList}>
@@ -275,7 +286,8 @@ export const FirebaseOrderDetailsSheet = memo(({
 
               <View style={styles.section}>
                 <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Order Timeline</ThemedText>
-                <View style={[styles.timelineContainer, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
+                <View style={[
+                ]}>
                   <View style={styles.timelineItem}>
                     <ThemedText style={styles.timelineLabel}>Created At</ThemedText>
                     <ThemedText type="defaultSemiBold" style={styles.timelineValue}>{formatDate(order.createdAt)}</ThemedText>
@@ -292,22 +304,27 @@ export const FirebaseOrderDetailsSheet = memo(({
               {order.trackingId && (
                 <View style={styles.section}>
                   <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Shipping Information</ThemedText>
-                  <View style={[styles.shippingContainer, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
+                  <View style={[
+                    ]}>
                     <ThemedText type="defaultSemiBold" style={styles.trackingId}>Tracking ID: {order.trackingId}</ThemedText>
                     <View style={styles.shippingActions}>
                       <Pressable
-                        style={[styles.shippingButton, styles.outlineButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.8)' }]}
+                        style={[styles.shippingButton, styles.outlineButton, { borderColor: colorScheme === 'dark' ? 'rgba(159, 122, 234, 0.4)' : 'rgba(139, 92, 246, 0.4)'}]}
                         onPress={handleTrackingPress}
-                        android_ripple={{ color: 'rgba(139, 92, 246, 0.1)' }}>
-                        <MaterialCommunityIcons name="truck-delivery" size={16} color="#8B5CF6" />
+                        android_ripple={{ color: 'rgba(139, 92, 246, 0.2)' }}>
+                        <MaterialCommunityIcons name="truck-delivery-outline" size={18} color="#8B5CF6" />
                         <ThemedText style={[styles.buttonText, { color: '#8B5CF6' }]}>Track on Delhivery</ThemedText>
                       </Pressable>
                       <Pressable
-                        style={[styles.shippingButton, styles.primaryButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : '#8B5CF6' }]}
+                       style={[
+                        styles.shippingButton,
+                        styles.primaryButton,
+                         { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.9)' : '#8B5CF6' }
+                        ]}
                         onPress={handleTrackingStatus}
-                        android_ripple={{ color: 'rgba(255, 255, 255, 0.1)' }}>
-                        <MaterialCommunityIcons name="truck-check" size={16} color={colorScheme === 'dark' ? '#8B5CF6' : '#FFFFFF'} />
-                        <ThemedText style={[styles.buttonText, { color: colorScheme === 'dark' ? '#8B5CF6' : '#FFFFFF' }]}>View Tracking</ThemedText>
+                        android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}>
+                        <MaterialCommunityIcons name="truck-check-outline" size={18} color={colorScheme === 'dark' ? '#FFFFFF' : '#FFFFFF'} />
+                        <ThemedText style={[styles.buttonText, { color: '#FFFFFF' }]}>View Tracking</ThemedText>
                       </Pressable>
                     </View>
                   </View>
@@ -332,135 +349,122 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Slightly darker backdrop
   },
   backdropPressable: {
     flex: 1,
   },
   modalContainer: {
-    height: '90%',
+    height: '90%', // Consider making this dynamic based on content
     backgroundColor: 'transparent',
   },
   sheetContainer: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25, // Increased radius
+    borderTopRightRadius: 25,
     overflow: 'hidden',
   },
   dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: 'rgba(156, 163, 175, 0.4)',
-    borderRadius: 2,
+    width: 50,
+    height: 5,
+    backgroundColor: 'rgba(156, 163, 175, 0.6)', // Slightly more opaque
+    borderRadius: 2.5,
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 10, // Increased margin
+    marginBottom: 8,
   },
   header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(75, 85, 99, 0.2)',
+    padding: 18, // Increased padding
+    // Removed borderBottom
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 18, // Align with header padding
+    left: 18,
     zIndex: 1,
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    paddingTop: 4,
+    marginBottom: 10, // Increased margin
+    paddingTop: 6
   },
   headerIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40, // Slightly larger
+    height: 40,
+    borderRadius: 12, // Increased radius
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   orderTitle: {
-    fontSize: isSmallScreen ? 16 : 18,
-    fontWeight: '600',
+    fontSize: isSmallScreen ? 17 : 19,
+    fontWeight: '700', // Bolder
     letterSpacing: 0.5,
   },
   headerMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 16, // Increased gap
   },
   customerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5, // Increased gap
   },
   customerName: {
-    fontSize: isSmallScreen ? 12 : 13,
-    opacity: 0.8,
+    fontSize: isSmallScreen ? 13 : 14, // Increased font size
+    opacity: 0.85, // Slightly more opaque
   },
   dateInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5, // Increased gap
   },
   date: {
-    fontSize: isSmallScreen ? 12 : 13,
-    opacity: 0.8,
+    fontSize: isSmallScreen ? 13 : 14,  // Increased font size
+    opacity: 0.85,
   },
   content: {
     flex: 1,
   },
   section: {
-    padding: 16,
+    padding: 18, // Increased padding
   },
   sectionTitle: {
-    fontSize: isSmallScreen ? 15 : 16,
-    marginBottom: 12,
+    fontSize: isSmallScreen ? 16 : 17, // Increased font size
+    marginBottom: 14, // Increased margin
   },
   productsList: {
-    gap: 12,
+    gap: 14, // Increased gap
   },
   productCard: {
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
+    borderRadius: 15, // Increased radius
+    padding: 14, // Increased padding
+    // Removed border
   },
   productContent: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 14, // Increased gap
   },
   productImageContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: 65, // Slightly larger
+    height: 65,
+    borderRadius: 10, // Increased radius
     overflow: 'hidden',
-    backgroundColor: 'rgba(75, 85, 99, 0.1)',
+     backgroundColor: 'rgba(75, 85, 99, 0.1)',
   },
   productImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'transparent',
+    backgroundColor: 'transparent'
   },
   productInfo: {
     flex: 1,
@@ -469,146 +473,144 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 4,
+    marginBottom: 5, // Increased margin
   },
   productName: {
-    fontSize: isSmallScreen ? 13 : 14,
+    fontSize: isSmallScreen ? 14 : 15,
     flex: 1,
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   productPrice: {
-    fontSize: isSmallScreen ? 14 : 15,
-    fontWeight: '600',
+    fontSize: isSmallScreen ? 15 : 16,
+    fontWeight: '700', // Bolder
     color: '#8B5CF6',
   },
   productMetaRow: {
     flexDirection: 'column',
-    gap: 4,
+    gap: 5, // Increased gap
   },
   skuContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   metaText: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
+    fontSize: isSmallScreen ? 12 : 13,
+    opacity: 0.75, // Slightly more opaque
   },
   bulletPoint: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(75, 85, 99, 0.5)',
-    marginHorizontal: 6,
+    width: 4, // Slightly larger
+    height: 4,
+    borderRadius: 2, // Increased radius
+    backgroundColor: 'rgba(75, 85, 99, 0.6)', // Slightly more opaque
+    marginHorizontal: 8, // Increased margin
   },
   variantsScroll: {
-    marginTop: 4,
+    marginTop: 6, // Increased margin
   },
-  variantsScrollContent: {
-    flexDirection: 'row',
-  },
+variantsScrollContent:{
+   flexDirection: 'row',
+},
   variantBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10, // Increased padding
+    paddingVertical: 5,
+    borderRadius: 10, // Increased radius
   },
   variantBadgeMargin: {
-    marginLeft: 6,
+    marginLeft: 8, // Increased margin
   },
   variantText: {
-    fontSize: isSmallScreen ? 10 : 11,
-    fontWeight: '500',
+    fontSize: isSmallScreen ? 11 : 12,
+    fontWeight: '600', // Bolder
     color: '#8B5CF6',
   },
   productActions: {
     flexDirection: 'row',
-    gap: 6,
-    marginTop: 8,
+    gap: 8, // Increased gap
+    marginTop: 10, // Increased margin
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
   actionButtonText: {
-    fontSize: isSmallScreen ? 10 : 11,
-    fontWeight: '500',
+    fontSize: isSmallScreen ? 11 : 12,
+    fontWeight: '600', // Bolder
   },
   timelineContainer: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-    gap: 12,
+    padding: 18, // Increased padding
+    borderRadius: 15, // Increased radius
+    // Removed border
+    gap: 14, // Increased gap
   },
   timelineItem: {
-    gap: 4,
+    gap: 5, // Increased gap
   },
   timelineLabel: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
+    fontSize: isSmallScreen ? 12 : 13,
+    opacity: 0.75,
   },
   timelineValue: {
-    fontSize: isSmallScreen ? 13 : 14,
+     fontSize: isSmallScreen ? 14 : 15,
+    fontWeight: '600' // Increased font size
   },
   shippingContainer: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
+    padding: 18, // Increased padding
+    borderRadius: 15, // Increased radius
+    // Removed border
   },
   trackingId: {
-    fontSize: isSmallScreen ? 13 : 14,
-    marginBottom: 12,
+    fontSize: isSmallScreen ? 14 : 15,
+    marginBottom: 14, // Increased margin
   },
   shippingActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10, // Increased gap
   },
   shippingButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    gap: 8, // Increased gap
+    paddingVertical: 10, // Increased padding
+    paddingHorizontal: 18,
+    borderRadius: 10, // Increased radius
   },
   outlineButton: {
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
   },
   primaryButton: {
-    backgroundColor: '#8B5CF6',
+    // backgroundColor: '#8B5CF6',  // Keep consistent purple
   },
   buttonText: {
-    fontSize: isSmallScreen ? 13 : 14,
-    fontWeight: '500',
+     fontSize: isSmallScreen ? 14 : 15,
+    fontWeight: '600', // Bolder
   },
   bottomSpacing: {
-    height: 32,
+    height: 40, // Increased spacing
   },
-  clickableImage: {
-    cursor: 'pointer',
+  clickableImage:{
+    cursor: 'pointer'
   },
-  previewBackdrop: {
+   previewBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Darker backdrop
     justifyContent: 'center',
     alignItems: 'center',
   },
   previewImageContainer: {
     width: width * 0.9,
     height: height * 0.6,
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    overflow: 'hidden',
+    backgroundColor: 'transparent', // Ensure transparency
+    borderRadius: 15, // Increased radius
+    overflow: 'hidden', // Ensure image corners are rounded
   },
   previewImage: {
     width: '100%',
     height: '100%',
   },
-}); 
+});

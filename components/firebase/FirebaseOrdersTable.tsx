@@ -8,37 +8,39 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { FirebaseOrder } from '@/types/firebase-order';
 import { formatDate } from '@/utils/date';
 import { OrderEditModal } from '../orders/OrderEditModal';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 380;
 
+// Modern color palette (no green)
 const STATUS_COLORS = {
   pending: {
-    bg: '#FEF9C320',
-    text: '#854D0E',
-    rowBg: '#FEF9C310',
-    dark: { bg: '#42200620', text: '#FDE047', rowBg: '#42200610' }
+    bg: '#FFF3C820',
+    text: '#D97706',
+    rowBg: '#FFFBEB',
+    dark: { bg: '#42200630', text: '#FACC15', rowBg: '#33200620' }
   },
   completed: {
-    bg: '#DCFCE720',
-    text: '#166534',
-    rowBg: '#DCFCE710',
-    dark: { bg: '#052E1620', text: '#4ADE80', rowBg: '#052E1610' }
+    bg: '#E5E7EB30',
+    text: '#6B7280',
+    rowBg: '#F9FAFB',
+    dark: { bg: '#37415130', text: '#D1D5DB', rowBg: '#1F293720' }
   }
 } as const;
 
 const ORDER_STATUS_COLORS = {
   cod: {
-    bg: '#FFEDD520',
-    text: '#9A3412',
-    rowBg: '#FFEDD510',
-    dark: { bg: '#43140720', text: '#FB923C', rowBg: '#43140710' }
+    bg: '#FFEDD530',
+    text: '#EA580C',
+    rowBg: '#FFF7ED',
+    dark: { bg: '#43140730', text: '#F97316', rowBg: '#43140720' }
   },
   prepaid: {
-    bg: '#DBEAFE20',
-    text: '#1E40AF',
-    rowBg: '#DBEAFE10',
-    dark: { bg: '#17255420', text: '#60A5FA', rowBg: '#17255410' }
+    bg: '#BFDBFE30',
+    text: '#2563EB',
+    rowBg: '#EFF6FF',
+    dark: { bg: '#17255430', text: '#3B82F6', rowBg: '#17255420' }
   }
 } as const;
 
@@ -62,9 +64,10 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
   const colorScheme = useColorScheme();
   const statusColor = useMemo(() => getStatusColor(order.status), [order.status]);
   const orderStatusColor = useMemo(() => getOrderStatusColor(order.orderstatus), [order.orderstatus]);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   React.useEffect(() => {
     Animated.parallel([
@@ -80,8 +83,15 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
         delay: index * 100,
         useNativeDriver: true,
       }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 50,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
     ]).start();
-  }, []);
+  }, [index]);
 
   const handleTrackingPress = useCallback(() => {
     if (order.trackingId) {
@@ -93,22 +103,34 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
     return order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0);
   }, [order.products]);
 
+  const gradientColors = colorScheme === 'dark'
+    ? ['#37415130', '#1F293720']
+    : ['#F9FAFB', '#E5E7EB30'];
+
   return (
     <Animated.View style={[
-      { opacity: fadeAnim, transform: [{ translateY }] }
+      styles.orderRowContainer, // OUTSIDE shadow
+      { opacity: fadeAnim, transform: [{ translateY }, { scale: scaleAnim }] }
     ]}>
-      <Pressable 
+      <Pressable
         onPress={onPress}
         style={({ pressed }) => [
           styles.orderRow,
+          order.status.toLowerCase() === 'completed' && { overflow: 'hidden' },
           {
-            backgroundColor: colorScheme === 'dark' 
-              ? statusColor.dark.rowBg 
-              : statusColor.rowBg,
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          }
+             backgroundColor:  order.status.toLowerCase() === 'completed'? undefined : (colorScheme === 'dark' ? statusColor.dark.rowBg : statusColor.rowBg),
+            // No need for orderRowPressed styles now, handled by scaleAnim
+          },
         ]}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
+        {order.status.toLowerCase() === 'completed' && (
+          <LinearGradient
+            colors={gradientColors as [string, string, ...string[]]}
+            style={StyleSheet.absoluteFill}
+            start={[0, 0]}
+            end={[1, 1]}
+          />
+        )}
         <View style={styles.orderContent}>
           <View style={styles.orderHeader}>
             <View style={styles.orderInfo}>
@@ -118,17 +140,13 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
               <View style={[
                 styles.statusBadge,
                 {
-                  backgroundColor: colorScheme === 'dark' 
-                    ? statusColor.dark.bg 
-                    : statusColor.bg
+                  backgroundColor: colorScheme === 'dark' ? statusColor.dark.bg : statusColor.bg
                 }
               ]}>
                 <ThemedText style={[
                   styles.statusText,
                   {
-                    color: colorScheme === 'dark' 
-                      ? statusColor.dark.text 
-                      : statusColor.text
+                    color: colorScheme === 'dark' ? statusColor.dark.text : statusColor.text
                   }
                 ]}>
                   {order.status.toUpperCase()}
@@ -137,17 +155,13 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
               <View style={[
                 styles.statusBadge,
                 {
-                  backgroundColor: colorScheme === 'dark' 
-                    ? orderStatusColor.dark.bg 
-                    : orderStatusColor.bg
+                  backgroundColor: colorScheme === 'dark' ? orderStatusColor.dark.bg : orderStatusColor.bg
                 }
               ]}>
                 <ThemedText style={[
                   styles.statusText,
                   {
-                    color: colorScheme === 'dark' 
-                      ? orderStatusColor.dark.text 
-                      : orderStatusColor.text
+                    color: colorScheme === 'dark' ? orderStatusColor.dark.text : orderStatusColor.text
                   }
                 ]}>
                   {order.orderstatus.toUpperCase()}
@@ -164,7 +178,7 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
               <View style={styles.customerNameContainer}>
                 <MaterialCommunityIcons
                   name="account"
-                  size={16}
+                  size={18}
                   color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
                 />
                 <ThemedText type="defaultSemiBold" style={styles.customerName}>
@@ -177,8 +191,8 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
                 <View style={styles.metaItem}>
                   <MaterialCommunityIcons
                     name="shopping"
-                    size={14}
-                    color={colorScheme === 'dark' ? '#8B5CF680' : '#6366F180'}
+                    size={16}
+                    color={colorScheme === 'dark' ? '#A855F7' : '#6366F1'}
                   />
                   <ThemedText style={styles.metaText}>
                     {order.products.length} items
@@ -187,8 +201,8 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
                 <View style={styles.metaItem}>
                   <MaterialCommunityIcons
                     name="clock-outline"
-                    size={14}
-                    color={colorScheme === 'dark' ? '#8B5CF680' : '#6366F180'}
+                    size={16}
+                    color={colorScheme === 'dark' ? '#A855F7' : '#6366F1'}
                   />
                   <ThemedText style={styles.metaText}>
                     {formatDate(order.createdAt)}
@@ -202,13 +216,13 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
                     style={({ pressed }) => [
                       styles.actionButton,
                       styles.trackingButton,
-                      { opacity: pressed ? 0.7 : 1 }
+                        { borderColor: pressed ? 'rgba(139, 92, 246, 0.5)' : 'rgba(139, 92, 246, 0.2)' }
                     ]}
-                    android_ripple={{ color: 'rgba(22, 163, 74, 0.1)' }}>
+                    android_ripple={{ color: 'rgba(139, 92, 246, 0.1)' }}>
                     <MaterialCommunityIcons
                       name="truck-delivery"
-                      size={14}
-                      color="#16A34A"
+                      size={16}
+                      color="#8B5CF6"
                     />
                     <ThemedText style={styles.trackingText}>Track</ThemedText>
                   </Pressable>
@@ -218,12 +232,12 @@ const OrderRow = memo(({ order, index, onPress, onPressTracking, onEdit }: Order
                   style={({ pressed }) => [
                     styles.actionButton,
                     styles.editButton,
-                    { opacity: pressed ? 0.7 : 1 }
+                    { backgroundColor: pressed ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }
                   ]}
                 >
                   <MaterialCommunityIcons
                     name="pencil"
-                    size={14}
+                    size={16}
                     color="#8B5CF6"
                   />
                   <ThemedText style={styles.editButtonText}>Edit</ThemedText>
@@ -249,10 +263,10 @@ export interface FirebaseOrdersTableProps {
   onEditSuccess?: () => Promise<void>;
 }
 
-export function FirebaseOrdersTable({ 
-  orders, 
-  loading, 
-  onRefresh, 
+export function FirebaseOrdersTable({
+  orders,
+  loading,
+  onRefresh,
   refreshing,
   onOrderPress,
   onTrackingPress,
@@ -260,18 +274,38 @@ export function FirebaseOrdersTable({
 }: FirebaseOrdersTableProps) {
   const colorScheme = useColorScheme();
   const emptyStateAnim = useRef(new Animated.Value(0)).current;
+  const emptyStateBounce = useRef(new Animated.Value(0)).current;
+
   const [selectedOrder, setSelectedOrder] = useState<FirebaseOrder | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   React.useEffect(() => {
     if (orders.length === 0 && !loading) {
+      Animated.sequence([
       Animated.timing(emptyStateAnim, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
-      }).start();
+      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(emptyStateBounce, {
+            toValue: 10,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(emptyStateBounce, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true
+          })
+        ])
+        )
+        ]).start()
+
     }
   }, [orders.length, loading]);
+
 
   const handleEdit = useCallback((order: FirebaseOrder) => {
     setSelectedOrder(order);
@@ -287,42 +321,43 @@ export function FirebaseOrdersTable({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8B5CF6" />
+          <ActivityIndicator size="large" color="#8B5CF6" />
+          <ThemedText style={styles.loadingText}>Loading orders...</ThemedText>
       </View>
     );
   }
 
   if (orders.length === 0 && !loading) {
     return (
-      <Animated.View 
+      <Animated.View
         style={[
           styles.emptyState,
           {
-            backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(31, 41, 55, 0.5)' 
-              : 'rgba(255, 255, 255, 0.5)',
-            opacity: emptyStateAnim
+            opacity: emptyStateAnim,
+             transform: [{ translateY: emptyStateBounce }],
           }
         ]}>
+         <LinearGradient
+            colors={colorScheme === 'dark' ? ['rgba(31, 41, 55, 0.7)', 'rgba(0, 0, 0, 0.4)'] : ['rgba(255, 255, 255, 0.9)', 'rgba(249, 250, 251, 0.7)']}
+            style={StyleSheet.absoluteFill}
+          />
         <View style={[
           styles.emptyStateIcon,
           {
-            backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(139, 92, 246, 0.1)' 
-              : 'rgba(139, 92, 246, 0.05)'
+            backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)'
           }
         ]}>
           <MaterialCommunityIcons
-            name="package-variant"
-            size={32}
+            name="package-variant-closed"
+            size={48}
             color="#8B5CF6"
           />
         </View>
         <ThemedText type="defaultSemiBold" style={styles.emptyStateTitle}>
-          No orders found
+          No Orders Yet
         </ThemedText>
         <ThemedText style={styles.emptyStateText}>
-          New orders will appear here
+          Your new orders will appear here.
         </ThemedText>
       </Animated.View>
     );
@@ -354,21 +389,33 @@ export function FirebaseOrdersTable({
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
+    loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
+    loadingText:{
+        marginTop: 12,
+        color: '#8B5CF6',
+        fontSize: 16
+    },
   ordersList: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  orderRowContainer: {
+    marginBottom: 12,
+    borderRadius: 16,
+    backgroundColor: 'white',
   },
   orderRow: {
-    marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
+  },
+  orderRowPressed: {
+    transform: [{ scale: 0.98 }],
   },
   orderContent: {
     padding: 12,
@@ -388,6 +435,7 @@ const styles = StyleSheet.create({
   orderNumber: {
     fontSize: isSmallScreen ? 14 : 15,
     color: '#8B5CF6',
+    fontWeight: '700',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -396,11 +444,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: isSmallScreen ? 10 : 11,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   orderTotal: {
     fontSize: isSmallScreen ? 14 : 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#8B5CF6',
   },
   customerInfo: {
@@ -409,13 +457,14 @@ const styles = StyleSheet.create({
   customerDetails: {
     gap: 4,
   },
-  customerNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+    customerNameContainer:{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
   customerName: {
     fontSize: isSmallScreen ? 13 : 14,
+     fontWeight: '600'
   },
   orderMetaInfo: {
     flexDirection: 'row',
@@ -434,7 +483,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.7,
+    opacity: 0.8,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -450,16 +499,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   trackingButton: {
-    backgroundColor: 'rgba(22, 163, 74, 0.1)',
-  },
-  editButton: {
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+      backgroundColor:  'rgba(139, 92, 246, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(139, 92, 246, 0.2)',
   },
+  editButton: {
+      borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.3)',
+  },
   trackingText: {
     fontSize: isSmallScreen ? 11 : 12,
-    color: '#16A34A',
+    color: '#8B5CF6',
     fontWeight: '600',
   },
   editButtonText: {
@@ -468,25 +518,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emptyState: {
-    padding: 32,
+    padding: 24,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 24,
     marginHorizontal: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    overflow: 'hidden',
+    backgroundColor: 'white', // ADDED THIS for Android elevation
   },
   emptyStateIcon: {
     padding: 16,
@@ -496,10 +535,11 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 16,
     marginBottom: 8,
+    fontWeight: '700'
   },
   emptyStateText: {
-    opacity: 0.7,
+    opacity: 0.8,
     fontSize: 14,
     textAlign: 'center',
   },
-}); 
+});

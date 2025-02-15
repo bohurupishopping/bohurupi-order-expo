@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View, Dimensions, Animated, RefreshControl, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, View, Dimensions, Animated, RefreshControl, Pressable, Platform, SafeAreaView } from 'react-native'; // Added SafeAreaView
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -14,7 +15,7 @@ import type { FirebaseOrder } from '@/types/firebase-order';
 import type { TransformedOrder } from '@/services/api/woo-orders';
 
 const { width } = Dimensions.get('window');
-const cardWidth = (width - 32) / 2.2;
+const cardWidth = (width - 40) / 2; // Adjusted for padding and two columns
 
 interface DashboardMetrics {
   totalRevenue: number;
@@ -36,7 +37,7 @@ interface DashboardCardProps {
   value: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   subtitle?: string;
-  color?: string;
+  gradientColors: string[]; // Use gradientColors instead of a single color
 }
 
 function useFadeInAnimation(duration: number = 500, initialTranslateY: number = 20): { fadeAnim: Animated.Value; translateY: Animated.Value } {
@@ -51,42 +52,38 @@ function useFadeInAnimation(duration: number = 500, initialTranslateY: number = 
   return { fadeAnim, translateY };
 }
 
-function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: DashboardCardProps) {
+function DashboardCard({ title, value, icon, subtitle, gradientColors }: DashboardCardProps) {
   const colorScheme = useColorScheme();
   const { fadeAnim, translateY } = useFadeInAnimation();
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }], width: cardWidth, marginBottom: 20 }}>
       <Pressable
         style={({ pressed }) => [
-          styles.card, 
+          styles.card,
           {
-            backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-            elevation: 3,
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          }
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          },
+          // styles.cardShadow, // Removed shadow
         ]}
       >
         <LinearGradient
-          colors={colorScheme === 'dark'
-            ? ['rgba(31, 41, 55, 0.8)', 'rgba(31, 41, 55, 0.9)']
-            : ['rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.9)']}
+          colors={gradientColors as [string, string, ...string[]]}
           style={styles.cardContent}
         >
           <View style={styles.cardHeader}>
-            <View style={[styles.iconContainer, { backgroundColor: color }]}>
-              <MaterialCommunityIcons name={icon} size={20} color="white" />
+            <View style={[styles.iconContainer, { backgroundColor: gradientColors[0] }]}>
+              <MaterialCommunityIcons name={icon} size={24} color="white" />
             </View>
             <ThemedText type="defaultSemiBold" style={styles.cardTitle}>
               {title}
             </ThemedText>
           </View>
-          <ThemedText type="title" style={styles.cardValue}>
+          <ThemedText type="title" style={[styles.cardValue, { color: 'white' }]}>
             {value}
           </ThemedText>
           {subtitle && (
-            <ThemedText style={styles.cardSubtitle}>
+            <ThemedText style={[styles.cardSubtitle, { color: 'white' }]}>
               {subtitle}
             </ThemedText>
           )}
@@ -98,7 +95,7 @@ function DashboardCard({ title, value, icon, subtitle, color = '#A1CEDC' }: Dash
 
 function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentActivities'][0] }) {
   const colorScheme = useColorScheme();
-  const { fadeAnim, translateY } = useFadeInAnimation();
+  const { fadeAnim, translateY } = useFadeInAnimation(400, 10);
 
   return (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY }] }}>
@@ -107,15 +104,16 @@ function RecentActivityCard({ activity }: { activity: DashboardMetrics['recentAc
           styles.activityCard,
           {
             backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-            elevation: 3,
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-            transform: [{ scale: pressed ? 0.98 : 1 }]
-          }
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+            // borderWidth: 1, // Removed border
+            // borderColor: colorScheme === 'dark' ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)', // Removed border
+          },
+          // styles.cardShadow, // Removed shadow
         ]}
       >
         <View style={styles.activityHeader}>
           <View style={[styles.activityAvatar, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#E2E8F0' }]}>
-            <ThemedText>{activity.user.name[0]}</ThemedText>
+            <ThemedText style={{color: colorScheme === 'dark' ? '#fff' : '#000'}}>{activity.user.name[0]}</ThemedText>
           </View>
           <View style={styles.activityContent}>
             <ThemedText type="defaultSemiBold">{activity.user.name}</ThemedText>
@@ -138,6 +136,8 @@ export default function HomeScreen() {
     totalProducts: 0,
     recentActivities: [],
   });
+  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -171,59 +171,121 @@ export default function HomeScreen() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+    // Gradients
+  const revenueGradient = ['#4CAF50', '#8BC34A'];
+  const newOrdersGradient = ['#2196F3', '#42A5F5'];
+  const activeOrdersGradient = ['#FF9800', '#FFB74D'];
+  const totalProductsGradient = ['#9C27B0', '#BA68C8'];
+
+    // More pronounced header animations (same as Completed Orders)
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 150],
+    outputRange: [0, -75],
+    extrapolate: 'clamp',
+  });
+
+  const headerScale = scrollY.interpolate({
+    inputRange: [0, 150],
+    outputRange: [1, 0.9],
+    extrapolate: 'clamp',
+  });
+
+    const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <Animated.ScrollView
-      style={[styles.container, { backgroundColor: '#F8FAFC' }]}
-      showsVerticalScrollIndicator={false}
-      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      scrollEventThrottle={16}
-    >
-      <ThemedView style={[styles.header, { backgroundColor: 'transparent' }]}>
-        <ThemedText type="title">Dashboard</ThemedText>
-        <ThemedText style={styles.date}>{format(new Date(2025, 1, 15), 'MMMM d, yyyy')}</ThemedText>
-      </ThemedView>
-      <View style={styles.cardsContainer}>
-        <DashboardCard
-          title="Total Revenue"
-          value={`₹${metrics.totalRevenue.toLocaleString('en-IN')}`}
-          icon="currency-inr"
-          subtitle="+23% from last month"
-          color="#4CAF50"
-        />
-        <DashboardCard
-          title="New Orders"
-          value={metrics.newOrders.toString()}
-          icon="shopping"
-          subtitle="+12% increase"
-          color="#2196F3"
-        />
-        <DashboardCard
-          title="Active Orders"
-          value={metrics.activeOrders.toString()}
-          icon="clock-outline"
-          subtitle="Orders to process"
-          color="#FF9800"
-        />
-        <DashboardCard
-          title="Total Orders"
-          value={metrics.totalProducts.toString()}
-          icon="package-variant"
-          subtitle="Combined orders"
-          color="#9C27B0"
-        />
-      </View>
-      <ThemedView style={[styles.recentSection, { backgroundColor: 'transparent' }]}>
-        <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Recent Activities
-        </ThemedText>
-        <View style={styles.activitiesContainer}>
-          {metrics.recentActivities.map((activity) => (
-            <RecentActivityCard key={activity.id} activity={activity} />
-          ))}
+    <SafeAreaView style={styles.safeArea}>  {/* Use SafeAreaView as the top-level container */}
+        <Animated.View style={[
+        styles.header,
+        {
+          transform: [{ translateY: headerTranslateY }, { scale: headerScale }],
+          opacity: headerOpacity,
+          paddingTop: insets.top + 16, // Use safe area insets
+          paddingBottom: 16,
+        }
+      ]}>
+        <LinearGradient
+           colors={colorScheme === 'dark'
+            ? ['#1F2937', '#111827'] // Darker, more refined gradient
+            : ['#F9FAFB', '#E5E7EB']}  // Lighter, more subtle gradient
+          style={styles.headerGradient}>
+            <LinearGradient
+              colors={colorScheme === 'dark'
+                ? ['rgba(139, 92, 246, 0.3)', 'rgba(139, 92, 246, 0.15)'] // More opaque
+                : ['rgba(139, 92, 246, 0.2)', 'rgba(139, 92, 246, 0.1)']} // Slightly more opaque
+            style={styles.roundGradient}
+            start={[0, 0]}
+            end={[1, 1]}
+          />
+          <View style={styles.headerContent}>
+            <View style={styles.headerTextContainer}>
+              <ThemedText type="title" style={styles.headerTitle}>
+                  Dashboard
+              </ThemedText>
+              <ThemedText style={styles.headerSubtitle}>
+                 {format(new Date(), 'MMMM d, yyyy')}
+              </ThemedText>
+            </View>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+      <Animated.ScrollView
+        style={[styles.container, { backgroundColor: '#F5F5F5' }]}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C2BD9"/>}
+        scrollEventThrottle={16}
+          contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 100 + 16 } // Use safe area insets + header height
+        ]}
+      >
+
+        <View style={styles.cardsContainer}>
+          <DashboardCard
+            title="Total Revenue"
+            value={`₹${metrics.totalRevenue.toLocaleString('en-IN')}`}
+            icon="currency-inr"
+            subtitle="+23% from last month"
+            gradientColors={revenueGradient}
+          />
+          <DashboardCard
+            title="New Orders"
+            value={metrics.newOrders.toString()}
+            icon="shopping"
+            subtitle="+12% increase"
+            gradientColors={newOrdersGradient}
+          />
+          <DashboardCard
+            title="Active Orders"
+            value={metrics.activeOrders.toString()}
+            icon="clock-outline"
+            subtitle="Orders to process"
+            gradientColors={activeOrdersGradient}
+          />
+          <DashboardCard
+            title="Total Orders"
+            value={metrics.totalProducts.toString()}
+            icon="package-variant"
+            subtitle="Combined orders"
+            gradientColors={totalProductsGradient}
+          />
         </View>
-      </ThemedView>
-    </Animated.ScrollView>
+        <ThemedView style={[styles.recentSection, { backgroundColor: 'transparent' }]}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Recent Activities
+          </ThemedText>
+          <View style={styles.activitiesContainer}>
+            {metrics.recentActivities.map((activity) => (
+              <RecentActivityCard key={activity.id} activity={activity} />
+            ))}
+          </View>
+        </ThemedView>
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -272,104 +334,178 @@ function generateRecentActivities(firebaseOrders: FirebaseOrder[], wooOrders: Tr
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F5F5', // Consistent background
+  },
   container: {
     flex: 1,
-    padding: 10
   },
-  header: {
-    marginTop: 20,
-    marginBottom: 14
+    scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
   },
-  date: {
-    opacity: 0.7,
-    marginTop: 4,
-    fontSize: 14
+   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  headerGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    opacity: 0.8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+  },
+  statText: {
+    fontSize: 15,
+    color: '#8B5CF6',
+    fontWeight: '600',
   },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   card: {
-    width: cardWidth,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.1)'
   },
   cardContent: {
-    padding: 12
+    padding: 16,
+    height: 140,
+    justifyContent: 'space-between',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8
+    marginRight: 12,
   },
   cardTitle: {
     flex: 1,
-    fontSize: 13
+    fontSize: 14,
+    color: 'white',
   },
   cardValue: {
-    fontSize: 18,
-    marginBottom: 4
+    fontSize: 24,
   },
   cardSubtitle: {
-    opacity: 0.7,
-    fontSize: 12
+    opacity: 0.9,
+    fontSize: 12,
   },
   recentSection: {
-    marginBottom: 16
+    marginBottom: 16,
   },
   sectionTitle: {
-    marginBottom: 12
+    marginBottom: 12,
+      color: '#333',
   },
   activitiesContainer: {
-    gap: 8
+    gap: 10,
   },
   activityCard: {
-    padding: 12,
+    padding: 16,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.1)'
   },
   activityHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1
+    flex: 1,
   },
   activityAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12
+    marginRight: 12,
   },
   activityContent: {
-    flex: 1
+    flex: 1,
   },
   activityAction: {
     opacity: 0.7,
     fontSize: 12,
-    marginTop: 2
+    marginTop: 2,
   },
   activityTime: {
     fontSize: 12,
     opacity: 0.7,
-    marginLeft: 8
-  }
+    marginLeft: 8,
+  },
+    cardShadow: {
+    // ...Platform.select({ // Removed shadow
+    //   ios: {
+    //     shadowColor: '#000',
+    //     shadowOffset: { width: 0, height: 4 },
+    //     shadowOpacity: 0.2,
+    //     shadowRadius: 6,
+    //   },
+    //   android: {
+    //     elevation: 6,
+    //   },
+    // }),
+  },
+    roundGradient: {
+    position: 'absolute',
+    width: 400, // Larger gradient
+    height: 400,
+    borderRadius: 200, // Half of width/height
+    top: -200, // Adjusted position
+    right: -200,
+    opacity: 0.5, // Slightly more opaque
+  },
 });

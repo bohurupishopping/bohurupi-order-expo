@@ -37,38 +37,39 @@ interface FirebaseTrackingSheetProps {
 
 const STATUS_COLORS = {
   delivered: {
-    bg: 'rgba(16, 185, 129, 0.1)',
-    text: '#059669',
+    bg: 'rgba(22, 163, 74, 0.2)', // More vibrant green
+    text: '#16A34A',
     dark: {
-      bg: 'rgba(6, 78, 59, 0.3)',
-      text: '#34D399'
+      bg: 'rgba(22, 163, 74, 0.3)',
+      text: '#4ADE80' // Brighter green
     }
   },
   transit: {
-    bg: 'rgba(59, 130, 246, 0.1)',
-    text: '#2563EB',
+    bg: 'rgba(60, 131, 246, 0.2)', // Vibrant blue
+    text: '#3C83F6',
     dark: {
-      bg: 'rgba(30, 58, 138, 0.3)',
+      bg: 'rgba(60, 131, 246, 0.3)',
       text: '#60A5FA'
     }
   },
   picked: {
-    bg: 'rgba(139, 92, 246, 0.1)',
-    text: '#7C3AED',
+    bg: 'rgba(168, 85, 247, 0.2)', // Vibrant purple
+    text: '#A855F7',
     dark: {
-      bg: 'rgba(76, 29, 149, 0.3)',
-      text: '#A78BFA'
+      bg: 'rgba(168, 85, 247, 0.3)',
+      text: '#C084FC' // Brighter purple
     }
   },
   default: {
-    bg: 'rgba(156, 163, 175, 0.1)',
-    text: '#4B5563',
+    bg: 'rgba(166, 180, 208, 0.2)', // Soft gray-blue
+    text: '#6B7280',
     dark: {
-      bg: 'rgba(75, 85, 99, 0.3)',
-      text: '#9CA3AF'
+      bg: 'rgba(166, 180, 208, 0.3)',
+      text: '#A1A1AA'
     }
   }
 } as const;
+
 
 function getStatusColor(status: string) {
   const statusLower = status.toLowerCase();
@@ -85,62 +86,77 @@ const TimelineItem = memo(({ scan, index, total }: {
 }) => {
   const colorScheme = useColorScheme();
   const isFirst = index === 0;
-  
+
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
-  
+
   useEffect(() => {
     const timeout = setTimeout(() => {
-      opacity.value = withTiming(1, {
-        duration: 150,
-        easing: Easing.out(Easing.ease),
-      });
-      translateY.value = withSpring(0, {
-        mass: 0.3,
-        stiffness: 100,
-        damping: 10
-      });
-    }, index * 30);
-    
+      opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }); // Smoother easing
+      translateY.value = withSpring(0, { mass: 0.5, stiffness: 120, damping: 14 }); // More refined spring
+    }, index * 50); // Increased delay for a more staggered effect
+
     return () => clearTimeout(timeout);
-  }, []);
-  
+  }, [index]); // Only re-run if index changes
+
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }]
+    transform: [{ translateY: translateY.value }],
   }));
-  
+
   return (
     <Animated.View style={[styles.timelineItem, animStyle]}>
       {index !== total - 1 && (
-        <View style={[
+        <Animated.View style={[
           styles.timelineLine,
-          { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }
+          { backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(168, 85, 247, 0.2)' } // More vibrant line color
         ]} />
       )}
-      
+
       <View style={[
         styles.timelineDot,
         isFirst && styles.activeTimelineDot,
         {
-          backgroundColor: colorScheme === 'dark' 
-            ? isFirst ? 'rgba(139, 92, 246, 0.2)' : 'rgba(75, 85, 99, 0.2)'
-            : isFirst ? 'rgba(139, 92, 246, 0.1)' : 'rgba(229, 231, 235, 0.5)',
-          borderColor: isFirst ? '#8B5CF6' : colorScheme === 'dark' ? '#4B5563' : '#9CA3AF'
+          backgroundColor: colorScheme === 'dark'
+            ? isFirst ? 'rgba(168, 85, 247, 0.3)' : 'rgba(107, 114, 128, 0.3)' // Darker and more vibrant dot
+            : isFirst ? 'rgba(168, 85, 247, 0.2)' : 'rgba(229, 231, 235, 0.7)', // Lighter and more vibrant dot
+          borderColor: isFirst ? '#A855F7' : colorScheme === 'dark' ? '#6B7280' : '#9CA3AF',
+          // ...Platform.select({ // Consistent, more pronounced shadow
+          //   ios: {
+          //     shadowColor: isFirst ? '#A855F7' : '#000',
+          //     shadowOffset: { width: 0, height: 2 },
+          //     shadowOpacity: isFirst ? 0.3 : 0.2,
+          //     shadowRadius: 4,
+          //   },
+          //   android: {
+          //     elevation: isFirst ? 6 : 3,
+          //   },
+          // }),
         }
       ]}>
         <MaterialCommunityIcons
           name={isFirst ? "map-marker-radius" : "warehouse"}
-          size={12}
-          color={isFirst ? '#8B5CF6' : colorScheme === 'dark' ? '#6B7280' : '#4B5563'}
+          size={14}  // Slightly larger icons
+          color={isFirst ? '#A855F7' : colorScheme === 'dark' ? '#9CA3AF' : '#4B5563'}
         />
       </View>
-      
+
       <View style={[
         styles.timelineContent,
         {
-          backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)',
-          borderColor: colorScheme === 'dark' ? 'rgba(75, 85, 99, 0.4)' : 'rgba(229, 231, 235, 0.8)'
+          backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.7)' : 'rgba(255, 255, 255, 0.8)', // More opaque backgrounds
+          borderColor: colorScheme === 'dark' ? 'rgba(107, 114, 128, 0.6)' : 'rgba(209, 213, 219, 0.8)', // Softer border
+          // ...Platform.select({ // More refined shadow
+          //   ios: {
+          //     shadowColor: '#000',
+          //     shadowOffset: { width: 0, height: 2 },
+          //     shadowOpacity: 0.15,
+          //     shadowRadius: 4,
+          //   },
+          //   android: {
+          //     elevation: 3,
+          //   },
+          // }),
         }
       ]}>
         <View style={styles.timelineHeader}>
@@ -151,23 +167,23 @@ const TimelineItem = memo(({ scan, index, total }: {
             {formatDate(scan.ScanDetail.ScanDateTime)}
           </ThemedText>
         </View>
-        
+
         <View style={styles.locationContainer}>
           <MaterialCommunityIcons
             name="map-marker"
-            size={14}
-            color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+            size={16} // Slightly larger icon
+            color={colorScheme === 'dark' ? '#A1A1AA' : '#6B7280'}
           />
           <ThemedText style={styles.locationText}>
             {scan.ScanDetail.ScanLocation || 'Location not available'}
           </ThemedText>
         </View>
-        
+
         {scan.ScanDetail.Instructions && (
           <View style={[
             styles.instructionsContainer,
             {
-              backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)'
+              backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.1)' // More vibrant instructions background
             }
           ]}>
             <ThemedText style={styles.instructionsText}>
@@ -184,7 +200,7 @@ TimelineItem.displayName = 'TimelineItem';
 
 const LoadingContent = memo(() => (
   <View style={styles.centerContainer}>
-    <ActivityIndicator size="large" color="#8B5CF6" />
+    <ActivityIndicator size="large" color="#A855F7" /> // More vibrant color
     <ThemedText style={styles.loadingText}>Loading tracking information...</ThemedText>
   </View>
 ));
@@ -195,18 +211,29 @@ const ErrorContent = memo(({ error, colorScheme }: { error: string; colorScheme:
   <View style={[
     styles.errorContainer,
     {
-      backgroundColor: colorScheme === 'dark' ? 'rgba(220, 38, 38, 0.1)' : 'rgba(254, 226, 226, 1)'
+      backgroundColor: colorScheme === 'dark' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(254, 202, 202, 0.8)', // More vibrant error background
+      // ...Platform.select({ // More refined shadow
+      //   ios: {
+      //     shadowColor: '#000',
+      //     shadowOffset: { width: 0, height: 2 },
+      //     shadowOpacity: 0.15,
+      //     shadowRadius: 4,
+      //   },
+      //   android: {
+      //     elevation: 3,
+      //   },
+      // }),
     }
   ]}>
     <MaterialCommunityIcons
       name="alert-circle"
-      size={24}
-      color={colorScheme === 'dark' ? '#FCA5A5' : '#DC2626'}
+      size={26}  // Slightly larger icon
+      color={colorScheme === 'dark' ? '#F87171' : '#EF4444'}
       style={styles.errorIcon}
     />
     <ThemedText style={[
       styles.errorText,
-      { color: colorScheme === 'dark' ? '#FCA5A5' : '#DC2626' }
+      { color: colorScheme === 'dark' ? '#F87171' : '#EF4444' }
     ]}>
       {error}
     </ThemedText>
@@ -229,53 +256,48 @@ export const FirebaseTrackingSheet = memo(({
   const translateY = useSharedValue(height);
 
   const handleDismiss = useCallback(() => {
-    translateY.value = withSpring(height, {
-      mass: 0.3,
-      stiffness: 100,
-      damping: 10
-    });
-    opacity.value = withTiming(0, {
-      duration: 150,
-      easing: Easing.out(Easing.ease),
-    }, () => {
+    translateY.value = withSpring(height, { mass: 0.5, stiffness: 120, damping: 14 }); // More refined spring
+    opacity.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.cubic) }, () => { // Smoother easing
       runOnJS(onClose)();
     });
   }, [onClose]);
 
   useEffect(() => {
     if (visible) {
-      opacity.value = withTiming(1, {
-        duration: 150,
-        easing: Easing.out(Easing.ease),
-      });
-      translateY.value = withSpring(0, {
-        mass: 0.3,
-        stiffness: 100,
-        damping: 10
-      });
+      opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }); // Smoother easing
+      translateY.value = withSpring(0, { mass: 0.5, stiffness: 120, damping: 14 }); // More refined spring
     }
   }, [visible]);
 
-  useEffect(() => {
-    let mounted = true;
+    useEffect(() => {
+    let isMounted = true;
 
-    async function fetchData() {
+    const fetchData = async () => {
       if (!trackingId || !visible) return;
-      
+
       try {
         setLoading(true);
         setError(null);
         const data = await fetchTrackingInfo(trackingId);
-        if (mounted) setTrackingData(data);
+        if (isMounted) {
+          setTrackingData(data);
+        }
       } catch (err) {
-        if (mounted) setError(err instanceof Error ? err.message : 'Failed to load tracking information');
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load tracking information');
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    }
+    };
 
     fetchData();
-    return () => { mounted = false; };
+
+    return () => {
+      isMounted = false;
+    };
   }, [trackingId, visible]);
 
   const backdropStyle = useAnimatedStyle(() => ({
@@ -289,7 +311,7 @@ export const FirebaseTrackingSheet = memo(({
   const currentShipment = trackingData?.ShipmentData[0]?.Shipment;
   const statusColors = useMemo(() => 
     currentShipment ? getStatusColor(currentShipment.Status.Status) : null, 
-    [currentShipment]
+    [currentShipment?.Status.Status]
   );
 
   const statusIcon = useMemo(() => {
@@ -298,7 +320,7 @@ export const FirebaseTrackingSheet = memo(({
     if (status.includes('delivered')) return 'package-variant-closed';
     if (status.includes('transit')) return 'truck-fast';
     return 'package-variant';
-  }, [currentShipment]);
+  }, [currentShipment?.Status.Status]);
 
   return (
     <Modal
@@ -308,38 +330,51 @@ export const FirebaseTrackingSheet = memo(({
       statusBarTranslucent
       onRequestClose={handleDismiss}>
       <View style={styles.container}>
-        <Animated.View 
+        <Animated.View
           style={[styles.backdrop, backdropStyle]}
           pointerEvents={visible ? 'auto' : 'none'}>
-          <Pressable 
-            style={styles.backdropPressable} 
+          <Pressable
+            style={styles.backdropPressable}
             onPress={handleDismiss}
           />
         </Animated.View>
 
-        <Animated.View 
+        <Animated.View
           style={[styles.modalContainer, modalStyle]}
           pointerEvents={visible ? 'auto' : 'none'}>
           <View style={[
             styles.sheetContainer,
-            { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF' }
+            { backgroundColor: colorScheme === 'dark' ? '#2D3748' : '#FFFFFF' } // Darker background for dark mode
           ]}>
             <View style={styles.dragHandle} />
 
             <View style={[
               styles.header,
-              { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }
+              { backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.1)' } // More vibrant header
             ]}>
               <Pressable
                 style={[
                   styles.closeButton,
-                  { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)' }
+                  {
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.8)' : 'rgba(249, 250, 251, 0.9)', // More opaque background
+                    // ...Platform.select({ // Consistent shadow
+                    //   ios: {
+                    //     shadowColor: '#000',
+                    //     shadowOffset: { width: 0, height: 2 },
+                    //     shadowOpacity: 0.2,
+                    //     shadowRadius: 4,
+                    //   },
+                    //   android: {
+                    //     elevation: 4,
+                    //   },
+                    // }),
+                  }
                 ]}
                 onPress={handleDismiss}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
-                <MaterialCommunityIcons 
+                <MaterialCommunityIcons
                   name="arrow-left"
-                  size={24}
+                  size={26} // Slightly larger icon
                   color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'}
                 />
               </Pressable>
@@ -347,12 +382,12 @@ export const FirebaseTrackingSheet = memo(({
               <View style={styles.headerContent}>
                 <View style={[
                   styles.headerIconContainer,
-                  { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }
+                  { backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(168, 85, 247, 0.2)' } // More vibrant icon background
                 ]}>
                   <MaterialCommunityIcons
                     name="truck-delivery"
-                    size={20}
-                    color="#8B5CF6"
+                    size={22} // Slightly larger icon
+                    color="#A855F7"
                   />
                 </View>
                 <ThemedText type="title" style={styles.trackingTitle}>
@@ -375,15 +410,28 @@ export const FirebaseTrackingSheet = memo(({
                 <View style={styles.trackingContent}>
                   <View style={[
                     styles.statusContainer,
-                    { backgroundColor: colorScheme === 'dark' ? statusColors?.dark.bg : statusColors?.bg }
+                    {
+                      backgroundColor: colorScheme === 'dark' ? statusColors?.dark.bg : statusColors?.bg,
+                      // ...Platform.select({ // More pronounced shadow
+                      //   ios: {
+                      //     shadowColor: '#000',
+                      //     shadowOffset: { width: 0, height: 3 },
+                      //     shadowOpacity: 0.2,
+                      //     shadowRadius: 5,
+                      //   },
+                      //   android: {
+                      //     elevation: 4,
+                      //   },
+                      // }),
+                    }
                   ]}>
                     <View style={[
                       styles.statusIconContainer,
-                      { backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.9)' }
+                      { backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.9)' } // More opaque icon background
                     ]}>
                       <MaterialCommunityIcons
                         name={statusIcon}
-                        size={24}
+                        size={28} // Slightly larger icon
                         color={colorScheme === 'dark' ? statusColors?.dark.text : statusColors?.text}
                       />
                     </View>
@@ -404,20 +452,20 @@ export const FirebaseTrackingSheet = memo(({
                   {currentShipment.EstimatedDeliveryDate && (
                     <View style={[
                       styles.estimatedDeliveryContainer,
-                      { backgroundColor: colorScheme === 'dark' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)' }
+                      { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' } // More vibrant estimated delivery container
                     ]}>
                       <View style={[
                         styles.estimatedDeliveryIcon,
-                        { backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.9)' }
+                        { backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.9)' } // More opaque icon background
                       ]}>
                         <MaterialCommunityIcons
                           name="calendar-clock"
-                          size={20}
-                          color="#6366F1"
+                          size={22} // Slightly larger icon
+                          color="#8B5CF6"
                         />
                       </View>
                       <View>
-                        <ThemedText type="defaultSemiBold" style={[styles.estimatedDeliveryTitle, { color: '#6366F1' }]}>
+                        <ThemedText type="defaultSemiBold" style={[styles.estimatedDeliveryTitle, { color: '#8B5CF6' }]}>
                           Estimated Delivery
                         </ThemedText>
                         <ThemedText style={styles.estimatedDeliveryDate}>
@@ -431,12 +479,12 @@ export const FirebaseTrackingSheet = memo(({
                     <View style={styles.historyHeader}>
                       <View style={[
                         styles.historyIconContainer,
-                        { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }
+                        { backgroundColor: colorScheme === 'dark' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(168, 85, 247, 0.1)' } // More vibrant icon background
                       ]}>
                         <MaterialCommunityIcons
                           name="clock-outline"
-                          size={16}
-                          color="#8B5CF6"
+                          size={18} // Slightly larger icon
+                          color="#A855F7"
                         />
                       </View>
                       <ThemedText type="defaultSemiBold" style={styles.historyTitle}>
@@ -473,7 +521,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Slightly darker backdrop
   },
   backdropPressable: {
     flex: 1,
@@ -484,65 +532,54 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 25, // Increased border radius
+    borderTopRightRadius: 25,
     overflow: 'hidden',
   },
   dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: 'rgba(156, 163, 175, 0.4)',
-    borderRadius: 2,
+    width: 50, // Larger drag handle
+    height: 5,
+    backgroundColor: 'rgba(156, 163, 175, 0.6)', // More visible drag handle
+    borderRadius: 2.5,
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 10, // Increased margin
+    marginBottom: 8,
   },
   header: {
-    padding: 16,
+    padding: 18, // Increased padding
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(75, 85, 99, 0.2)',
+    borderBottomColor: 'rgba(156, 163, 175, 0.3)', // Softer border color
   },
   closeButton: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 18, // Adjusted position
+    left: 18,
     zIndex: 1,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44, // Larger button
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
-    paddingTop: 4,
+    marginBottom: 10, // Increased margin
+    paddingTop: 6, // Increased padding
   },
   headerIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40, // Larger icon container
+    height: 40,
+    borderRadius: 12, // Increased border radius
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   trackingTitle: {
-    fontSize: isSmallScreen ? 16 : 18,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    fontSize: isSmallScreen ? 17 : 19, // Slightly larger title
+    fontWeight: '700', // Bolder font weight
+    letterSpacing: 0.6, // Slightly increased letter spacing
   },
   content: {
     flex: 1,
@@ -551,135 +588,116 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: 24, // Increased padding
     minHeight: 200,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 14,
+    marginTop: 14, // Increased margin
+    fontSize: 15, // Slightly larger text
     opacity: 0.7,
   },
   errorContainer: {
-    padding: 16,
-    borderRadius: 12,
-    margin: 16,
+    padding: 18, // Increased padding
+    borderRadius: 14, // Increased border radius
+    margin: 18, // Increased margin
     flexDirection: 'row',
     alignItems: 'center',
   },
   errorIcon: {
-    marginRight: 8,
+    marginRight: 10, // Increased margin
   },
   errorText: {
-    fontSize: 14,
+    fontSize: isSmallScreen ? 15 : 16, // Slightly larger text
     flex: 1,
   },
   trackingContent: {
-    padding: 16,
-    gap: 16,
+    padding: 18, // Increased padding
+    gap: 18, // Increased gap
   },
   statusContainer: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 18, // Increased padding
+    borderRadius: 14, // Increased border radius
     alignItems: 'center',
   },
   statusIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52, // Larger icon container
+    height: 52,
+    borderRadius: 26, // Increased border radius
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    marginBottom: 14, // Increased margin
   },
   statusText: {
-    fontSize: isSmallScreen ? 16 : 18,
-    marginBottom: 4,
+    fontSize: isSmallScreen ? 17 : 19, // Slightly larger text
+    fontWeight: '700', // Bolder font weight
+    marginBottom: 6, // Increased margin
     textAlign: 'center',
   },
   statusLocation: {
-    fontSize: isSmallScreen ? 13 : 14,
+    fontSize: isSmallScreen ? 14 : 15, // Slightly larger text
     opacity: 0.8,
-    marginBottom: 2,
+    marginBottom: 4, // Increased margin
     textAlign: 'center',
   },
   statusTime: {
-    fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.6,
+    fontSize: isSmallScreen ? 12 : 13, // Slightly larger text
+    opacity: 0.7, // Slightly reduced opacity
     textAlign: 'center',
   },
   estimatedDeliveryContainer: {
-    padding: 16,
-    borderRadius: 12,
+    padding: 18, // Increased padding
+    borderRadius: 14, // Increased border radius
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14, // Increased gap
   },
   estimatedDeliveryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44, // Larger icon container
+    height: 44,
+    borderRadius: 22, // Increased border radius
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   estimatedDeliveryTitle: {
-    fontSize: isSmallScreen ? 14 : 15,
-    marginBottom: 4,
+    fontSize: isSmallScreen ? 15 : 16, // Slightly larger text
+    fontWeight: '700', // Bolder font weight
+    marginBottom: 6, // Increased margin
   },
   estimatedDeliveryDate: {
-    fontSize: isSmallScreen ? 13 : 14,
+    fontSize: isSmallScreen ? 14 : 15, // Slightly larger text
     opacity: 0.8,
   },
   historyContainer: {
-    gap: 12,
+    gap: 14, // Increased gap
   },
   historyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10, // Increased gap
   },
   historyIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36, // Larger icon container
+    height: 36,
+    borderRadius: 18, // Increased border radius
     alignItems: 'center',
     justifyContent: 'center',
   },
   historyTitle: {
-    fontSize: isSmallScreen ? 15 : 16,
+    fontSize: isSmallScreen ? 16 : 17, // Slightly larger text
+    fontWeight: '700', // Bolder font weight
   },
   timeline: {
-    paddingLeft: 8,
+    paddingLeft: 10, // Increased padding
   },
   timelineItem: {
     position: 'relative',
-    paddingLeft: 24,
-    paddingBottom: 16,
+    paddingLeft: 28, // Increased padding
+    paddingBottom: 18, // Increased padding
   },
   timelineLine: {
     position: 'absolute',
-    left: 7,
-    top: 12,
+    left: 9, // Adjusted position
+    top: 14, // Adjusted position
     bottom: 0,
     width: 2,
   },
@@ -687,9 +705,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 18, // Larger dot
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -698,42 +716,43 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   timelineContent: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 14, // Increased padding
+    borderRadius: 10, // Increased border radius
     borderWidth: 1,
   },
   timelineHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 4,
+    marginBottom: 6, // Increased margin
   },
   scanText: {
     flex: 1,
-    fontSize: isSmallScreen ? 13 : 14,
-    marginRight: 8,
+    fontSize: isSmallScreen ? 14 : 15, // Slightly larger text
+    fontWeight: '600', // Bolder font weight
+    marginRight: 10, // Increased margin
   },
   timeText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 12 : 13, // Slightly larger text
     opacity: 0.7,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6, // Increased gap
   },
   locationText: {
-    fontSize: isSmallScreen ? 12 : 13,
+    fontSize: isSmallScreen ? 13 : 14, // Slightly larger text
     opacity: 0.7,
     flex: 1,
   },
   instructionsContainer: {
-    marginTop: 8,
-    padding: 8,
-    borderRadius: 6,
+    marginTop: 10, // Increased margin
+    padding: 10, // Increased padding
+    borderRadius: 8, // Increased border radius
   },
   instructionsText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 12 : 13, // Slightly larger text
     opacity: 0.8,
   },
-}); 
+});

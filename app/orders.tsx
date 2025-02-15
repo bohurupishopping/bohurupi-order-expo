@@ -3,6 +3,7 @@ import { StyleSheet, Animated, RefreshControl, Platform, View, Pressable } from 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -39,10 +40,18 @@ export default function OrdersScreen() {
   const [showPerPagePicker, setShowPerPagePicker] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
 
+  // Header animations (same as the other screens)
   const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -50],
+    inputRange: [0, 150],
+    outputRange: [0, -75],
+    extrapolate: 'clamp',
+  });
+
+  const headerScale = scrollY.interpolate({
+    inputRange: [0, 150],
+    outputRange: [1, 0.9],
     extrapolate: 'clamp',
   });
 
@@ -62,6 +71,7 @@ export default function OrdersScreen() {
       setOrders(data);
     } catch (error) {
       console.error('Error fetching orders:', error);
+      // TODO: Add user-facing error handling (e.g., a toast message)
     } finally {
       setLoading(false);
     }
@@ -74,50 +84,87 @@ export default function OrdersScreen() {
   const handleOrderPress = useCallback((order: WooCommerceOrder) => {
     setSelectedOrder(order);
     setDialogVisible(true);
+    if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
   }, []);
 
-  const handleStatusChange = useCallback((value: string) => {
-    Haptics.selectionAsync();
+    const handleStatusChange = useCallback((value: string) => {
+    if (Platform.OS !== "web") {
+       Haptics.selectionAsync();
+    }
+
     setStatusFilter(value);
     setShowStatusPicker(false);
   }, []);
 
   const handlePerPageChange = useCallback((value: number) => {
-    Haptics.selectionAsync();
+    if (Platform.OS !== "web") {
+      Haptics.selectionAsync();
+    }
     setPerPage(value);
     setShowPerPagePicker(false);
   }, []);
 
   return (
     <ThemedView style={styles.container}>
-      <Animated.View style={[styles.header, { transform: [{ translateY: headerTranslateY }], opacity: headerOpacity }]}>
+       <Animated.View style={[
+        styles.header,
+        {
+          transform: [{ translateY: headerTranslateY }, { scale: headerScale }],
+          opacity: headerOpacity,
+          paddingTop: insets.top + 16, // Add safe area padding
+          paddingBottom: 16,
+
+        }
+      ]}>
         <LinearGradient
-          colors={colorScheme === 'dark' 
-            ? ['#1a1b1e', '#2d2f34'] as const
-            : ['#ffffff', '#f5f5f5'] as const}
+          colors={colorScheme === 'dark'
+            ? ['#1F2937', '#111827']
+            : ['#F9FAFB', '#E5E7EB']}
           style={styles.headerGradient}>
+             <LinearGradient
+              colors={colorScheme === 'dark'
+                ? ['rgba(139, 92, 246, 0.3)', 'rgba(139, 92, 246, 0.15)']
+                : ['rgba(139, 92, 246, 0.2)', 'rgba(139, 92, 246, 0.1)']}
+            style={styles.roundGradient}
+            start={[0, 0]}
+            end={[1, 1]}
+          />
           <View style={styles.headerContent}>
-            <ThemedText type="title" style={styles.headerTitle}>Orders</ThemedText>
+            <View style={styles.headerTextContainer}>
+                <ThemedText type="title" style={styles.headerTitle}>
+                Orders
+                </ThemedText>
+                <ThemedText style={styles.headerSubtitle}>
+                 Manage your orders
+              </ThemedText>
+            </View>
 
             <View style={styles.headerActions}>
               <View style={styles.statBadge}>
-                <MaterialCommunityIcons name="shopping" size={14} color="#8B5CF6" />
-                <ThemedText style={styles.statText}>{orders.length}</ThemedText>
+                <MaterialCommunityIcons name="shopping" size={18} color="#8B5CF6" />
+                <ThemedText style={styles.statText}>{orders.length} Orders</ThemedText>
               </View>
 
               <Pressable
-                style={({ pressed }) => [
+                 style={({ pressed }) => [
                   styles.filterButton,
                   {
-                    backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
-                    opacity: pressed ? 0.7 : 1
-                  }
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',  // Consistent purple
+                  },
+                  pressed && styles.buttonPressed, // Apply pressed styles
                 ]}
-                onPress={() => setShowStatusPicker(true)}>
+                onPress={() => {
+                    setShowStatusPicker(true);
+                    if(Platform.OS !== 'web'){
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    }
+                }}>
                 <MaterialCommunityIcons
                   name="filter-variant"
-                  size={14}
-                  color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                  size={18}
+                    color={colorScheme === 'dark' ? '#D1D5DB' : '#8B5CF6'} // Consistent text color
                 />
                 <ThemedText style={styles.filterText}>
                   {STATUS_OPTIONS.find(opt => opt.value === statusFilter)?.label.replace(' Orders', '') || 'All'}
@@ -125,18 +172,23 @@ export default function OrdersScreen() {
               </Pressable>
 
               <Pressable
-                style={({ pressed }) => [
+                 style={({ pressed }) => [
                   styles.filterButton,
-                  {
-                    backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
-                    opacity: pressed ? 0.7 : 1
-                  }
+                   {
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)',  // Consistent purple
+                  },
+                  pressed && styles.buttonPressed, // Apply pressed styles
                 ]}
-                onPress={() => setShowPerPagePicker(true)}>
+                onPress={() => {
+                    setShowPerPagePicker(true);
+                    if(Platform.OS !== 'web'){
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    }
+                }}>
                 <MaterialCommunityIcons
                   name="format-list-numbered"
-                  size={14}
-                  color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                  size={18}
+                  color={colorScheme === 'dark' ? '#D1D5DB' : '#8B5CF6'} // Consistent text color
                 />
                 <ThemedText style={styles.filterText}>{perPage}</ThemedText>
               </Pressable>
@@ -153,12 +205,18 @@ export default function OrdersScreen() {
           { useNativeDriver: true }
         )}
         scrollEventThrottle={16}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 100 + 16 } // Add safe area padding + header
+        ]}
         refreshControl={
-          <RefreshControl 
-            refreshing={loading} 
+           <RefreshControl
+            refreshing={loading}
             onRefresh={handleFetchOrders}
-            tintColor={colorScheme === 'dark' ? '#A1CEDC' : '#1D3D47'}
+            tintColor={colorScheme === 'dark' ? '#A1CEDC' : '#8B5CF6'}
+            title={loading ? "Refreshing..." : "Pull to refresh"}
+            titleColor={colorScheme === 'dark' ? '#D1D5DB' : '#6B7280'}
+            progressViewOffset={insets.top + 100} // Adjust for safe area and header
           />
         }>
         <OrdersTable
@@ -179,7 +237,7 @@ export default function OrdersScreen() {
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setShowStatusPicker(false)}>
-          <View 
+          <View
             style={[
               styles.pickerContainer,
               {
@@ -187,20 +245,24 @@ export default function OrdersScreen() {
               }
             ]}>
             {STATUS_OPTIONS.map((option) => (
-              <Pressable
+               <Pressable
                 key={option.value}
                 style={({ pressed }) => [
                   styles.pickerOption,
                   statusFilter === option.value && styles.pickerOptionActive,
                   {
-                    opacity: pressed ? 0.7 : 1,
                     backgroundColor: statusFilter === option.value
-                      ? colorScheme === 'dark' ? '#374151' : '#F3F4F6'
+                      ? colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)'
                       : 'transparent'
-                  }
+                  },
+                  pressed && styles.buttonPressed,
                 ]}
                 onPress={() => handleStatusChange(option.value)}>
-                <ThemedText style={styles.pickerOptionText}>
+                <ThemedText style={[
+                    styles.pickerOptionText,
+                    { color: colorScheme === 'dark' ? '#D1D5DB' : '#4B5563' }, // Consistent text color
+                    statusFilter === option.value && { color: colorScheme === 'dark' ? '#FFF' : '#8B5CF6' }
+                    ]}>
                   {option.label}
                 </ThemedText>
               </Pressable>
@@ -214,7 +276,7 @@ export default function OrdersScreen() {
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setShowPerPagePicker(false)}>
-          <View 
+          <View
             style={[
               styles.pickerContainer,
               {
@@ -228,14 +290,18 @@ export default function OrdersScreen() {
                   styles.pickerOption,
                   perPage === option.value && styles.pickerOptionActive,
                   {
-                    opacity: pressed ? 0.7 : 1,
-                    backgroundColor: perPage === option.value
-                      ? colorScheme === 'dark' ? '#374151' : '#F3F4F6'
+                     backgroundColor: perPage === option.value
+                      ? colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)'
                       : 'transparent'
-                  }
+                  },
+                  pressed && styles.buttonPressed,
                 ]}
                 onPress={() => handlePerPageChange(option.value)}>
-                <ThemedText style={styles.pickerOptionText}>
+                <ThemedText style={[
+                    styles.pickerOptionText,
+                     { color: colorScheme === 'dark' ? '#D1D5DB' : '#4B5563' },
+                     perPage === option.value && { color: colorScheme === 'dark' ? '#FFF' : '#8B5CF6' }
+                     ]}>
                   {option.label}
                 </ThemedText>
               </Pressable>
@@ -250,6 +316,7 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: Platform.OS === "android" ? 16 : 0, // Add horizontal padding for Android
   },
   header: {
     position: 'absolute',
@@ -260,66 +327,77 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 8,
       },
     }),
   },
   headerGradient: {
-    padding: 12,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+    headerTextContainer: {
+    flex: 1,
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
+    marginBottom: 6,
+  },
+  headerSubtitle: {
+    fontSize: 15,
+    opacity: 0.8,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8, // Increased gap
   },
   statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
   },
   statText: {
-    fontSize: 12,
+    fontSize: 15,
     color: '#8B5CF6',
     fontWeight: '600',
   },
-  filterButton: {
+   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: 6, // Increased gap
+    paddingHorizontal: 12, // Increased padding
+    paddingVertical: 8,
+    borderRadius: 12, // Increased radius
+    //backgroundColor: 'rgba(139, 92, 246, 0.1)', // Moved to inline style
   },
   filterText: {
-    fontSize: 12,
+    fontSize: 14, // Increased font size
     fontWeight: '500',
+    color: '#8B5CF6'
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop: Platform.OS === 'ios' ? 100 : 80,
+    paddingBottom: 16,
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -331,21 +409,50 @@ const styles = StyleSheet.create({
   pickerContainer: {
     width: '80%',
     maxWidth: 300,
-    borderRadius: 12,
+    borderRadius: 16, // Increased radius
     overflow: 'hidden',
-    padding: 8,
+    padding: 12, // Increased padding
+    //backgroundColor: '#FFF', // Moved to inline style
+      ...Platform.select({ // Adding shadow to picker container
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   pickerOption: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12, // Increased radius
+    marginBottom: 8, // Added margin for spacing
+     //backgroundColor: 'transparent', // Moved to inline style
   },
   pickerOptionActive: {
-    borderWidth: 1,
+    // Styles for active option
+    // backgroundColor: 'rgba(139, 92, 246, 0.1)',  // Moved to inline
+      borderWidth: 1,
     borderColor: 'rgba(139, 92, 246, 0.2)',
   },
   pickerOptionText: {
-    fontSize: 14,
+    fontSize: 15, // Increased font size
     fontWeight: '500',
+      // color: '#4B5563', // Moved to inline style
   },
-}); 
+   roundGradient: {
+    position: 'absolute',
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    top: -200,
+    right: -200,
+    opacity: 0.5,
+  },
+   buttonPressed: {
+    transform: [{ scale: 0.95 }], // Scale down slightly on press
+  },
+});
