@@ -1,96 +1,84 @@
 import React, { useMemo, useRef, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Dimensions, Animated, Image, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Dimensions, Animated, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { format } from 'date-fns';
 
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { FirebaseOrder } from '@/types/firebase-order';
+import { formatDate } from '@/utils/date';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 380;
 
-interface StatusColorConfig {
-  bg: string;
-  text: string;
-  dark: {
-    bg: string;
-    text: string;
-  };
+const STATUS_COLORS = {
+  pending: {
+    bg: '#FEF9C320',
+    text: '#854D0E',
+    rowBg: '#FEF9C310',
+    dark: { bg: '#42200620', text: '#FDE047', rowBg: '#42200610' }
+  },
+  completed: {
+    bg: '#DCFCE720',
+    text: '#166534',
+    rowBg: '#DCFCE710',
+    dark: { bg: '#052E1620', text: '#4ADE80', rowBg: '#052E1610' }
+  }
+} as const;
+
+const ORDER_STATUS_COLORS = {
+  cod: {
+    bg: '#FFEDD520',
+    text: '#9A3412',
+    rowBg: '#FFEDD510',
+    dark: { bg: '#43140720', text: '#FB923C', rowBg: '#43140710' }
+  },
+  prepaid: {
+    bg: '#DBEAFE20',
+    text: '#1E40AF',
+    rowBg: '#DBEAFE10',
+    dark: { bg: '#17255420', text: '#60A5FA', rowBg: '#17255410' }
+  }
+} as const;
+
+function getStatusColor(status: string) {
+  return STATUS_COLORS[status.toLowerCase() as keyof typeof STATUS_COLORS] || STATUS_COLORS.pending;
 }
 
-function getStatusColor(status: string): StatusColorConfig {
-  const colors = {
-    pending: {
-      bg: '#FEF9C320',
-      text: '#854D0E',
-      dark: { bg: '#42200620', text: '#FDE047' }
-    },
-    completed: {
-      bg: '#DCFCE720',
-      text: '#166534',
-      dark: { bg: '#052E1620', text: '#4ADE80' }
-    }
-  } as const;
-  return colors[status.toLowerCase() as keyof typeof colors] || colors.pending;
-}
-
-function getOrderStatusColor(status: string): StatusColorConfig {
-  const colors = {
-    cod: {
-      bg: '#FFEDD520',
-      text: '#9A3412',
-      dark: { bg: '#43140720', text: '#FB923C' }
-    },
-    prepaid: {
-      bg: '#DBEAFE20',
-      text: '#1E40AF',
-      dark: { bg: '#17255420', text: '#60A5FA' }
-    }
-  } as const;
-  return colors[status.toLowerCase() as keyof typeof colors] || colors.cod;
+function getOrderStatusColor(status: string) {
+  return ORDER_STATUS_COLORS[status.toLowerCase() as keyof typeof ORDER_STATUS_COLORS] || ORDER_STATUS_COLORS.cod;
 }
 
 interface OrderRowProps {
   order: FirebaseOrder;
   onPress: () => void;
   onPressTracking: (trackingId: string) => void;
+  index: number;
 }
 
-const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRowProps & { index: number }) => {
+const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRowProps) => {
   const colorScheme = useColorScheme();
   const statusColor = useMemo(() => getStatusColor(order.status), [order.status]);
   const orderStatusColor = useMemo(() => getOrderStatusColor(order.orderstatus), [order.orderstatus]);
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-  const scale = useRef(new Animated.Value(0.95)).current;
+  const translateY = useRef(new Animated.Value(50)).current;
 
   React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          damping: 12,
-          mass: 0.4,
-          stiffness: 100,
-          useNativeDriver: true,
-        })
-      ]).start();
-    }, index * 30);
-
-    return () => clearTimeout(timeout);
-  }, [index]);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 500,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleTrackingPress = useCallback(() => {
     if (order.trackingId) {
@@ -98,9 +86,13 @@ const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRo
     }
   }, [order.trackingId, onPressTracking]);
 
+  const totalAmount = useMemo(() => {
+    return order.products.reduce((sum, product) => sum + (product.sale_price * product.qty), 0);
+  }, [order.products]);
+
   return (
     <Animated.View style={[
-      { opacity: fadeAnim, transform: [{ translateY }, { scale }] }
+      { opacity: fadeAnim, transform: [{ translateY }] }
     ]}>
       <Pressable 
         onPress={onPress}
@@ -108,175 +100,116 @@ const OrderRow = React.memo(({ order, onPress, onPressTracking, index }: OrderRo
           styles.orderRow,
           {
             backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(17, 24, 39, 0.8)' 
-              : 'rgba(255, 255, 255, 0.8)',
+              ? statusColor.dark.rowBg 
+              : statusColor.rowBg,
             transform: [{ scale: pressed ? 0.98 : 1 }]
           }
         ]}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
-        {/* Header Section */}
-        <View style={[
-          styles.orderHeader,
-          {
-            backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(31, 41, 55, 0.5)' 
-              : 'rgba(249, 250, 251, 0.8)'
-          }
-        ]}>
-          <View style={styles.orderHeaderContent}>
+        <View style={styles.orderContent}>
+          <View style={styles.orderHeader}>
             <View style={styles.orderInfo}>
-              <View style={styles.orderNumberContainer}>
-                <ThemedText type="defaultSemiBold" style={styles.orderNumber}>
-                  <ThemedText style={styles.orderNumberHash}>#</ThemedText>
-                  {order.orderId}
-                </ThemedText>
-                <View style={[
-                  styles.statusBadge,
+              <ThemedText type="defaultSemiBold" style={styles.orderNumber}>
+                #{order.orderId}
+              </ThemedText>
+              <View style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: colorScheme === 'dark' 
+                    ? statusColor.dark.bg 
+                    : statusColor.bg
+                }
+              ]}>
+                <ThemedText style={[
+                  styles.statusText,
                   {
-                    backgroundColor: colorScheme === 'dark' 
-                      ? order.status === 'completed' ? 'rgba(6, 95, 70, 0.3)' : 'rgba(153, 27, 27, 0.3)'
-                      : order.status === 'completed' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(220, 38, 38, 0.15)'
+                    color: colorScheme === 'dark' 
+                      ? statusColor.dark.text 
+                      : statusColor.text
                   }
                 ]}>
+                  {order.status.toUpperCase()}
+                </ThemedText>
+              </View>
+              <View style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: colorScheme === 'dark' 
+                    ? orderStatusColor.dark.bg 
+                    : orderStatusColor.bg
+                }
+              ]}>
+                <ThemedText style={[
+                  styles.statusText,
+                  {
+                    color: colorScheme === 'dark' 
+                      ? orderStatusColor.dark.text 
+                      : orderStatusColor.text
+                  }
+                ]}>
+                  {order.orderstatus.toUpperCase()}
+                </ThemedText>
+              </View>
+            </View>
+            <ThemedText style={styles.orderTotal}>
+              ₹{totalAmount.toFixed(2)}
+            </ThemedText>
+          </View>
+
+          <View style={styles.customerInfo}>
+            <View style={styles.customerDetails}>
+              <View style={styles.customerNameContainer}>
+                <MaterialCommunityIcons
+                  name="account"
+                  size={16}
+                  color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                />
+                <ThemedText type="defaultSemiBold" style={styles.customerName}>
+                  {order.customerName}
+                </ThemedText>
+              </View>
+            </View>
+            <View style={styles.orderMetaInfo}>
+              <View style={styles.metaInfoLeft}>
+                <View style={styles.metaItem}>
                   <MaterialCommunityIcons
-                    name={order.status === 'completed' ? 'check-circle' : 'clock-outline'}
-                    size={12}
-                    color={colorScheme === 'dark'
-                      ? order.status === 'completed' ? '#34D399' : '#FCA5A5'
-                      : order.status === 'completed' ? '#059669' : '#DC2626'
-                    }
+                    name="shopping"
+                    size={14}
+                    color={colorScheme === 'dark' ? '#8B5CF680' : '#6366F180'}
                   />
-                  <ThemedText style={[
-                    styles.statusText,
-                    {
-                      color: colorScheme === 'dark'
-                        ? order.status === 'completed' ? '#34D399' : '#FCA5A5'
-                        : order.status === 'completed' ? '#059669' : '#DC2626'
-                    }
-                  ]}>
-                    {order.status.toUpperCase()}
+                  <ThemedText style={styles.metaText}>
+                    {order.products.length} items
+                  </ThemedText>
+                </View>
+                <View style={styles.metaItem}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={14}
+                    color={colorScheme === 'dark' ? '#8B5CF680' : '#6366F180'}
+                  />
+                  <ThemedText style={styles.metaText}>
+                    {formatDate(order.createdAt)}
                   </ThemedText>
                 </View>
               </View>
-            </View>
-
-            {order.trackingId && (
-              <Pressable
-                onPress={handleTrackingPress}
-                style={({ pressed }) => [
-                  styles.trackingButton,
-                  {
-                    backgroundColor: colorScheme === 'dark'
-                      ? 'rgba(139, 92, 246, 0.2)'
-                      : 'rgba(139, 92, 246, 0.1)',
-                    opacity: pressed ? 0.8 : 1
-                  }
-                ]}
-                android_ripple={{ color: 'rgba(139, 92, 246, 0.2)' }}>
-                <MaterialCommunityIcons
-                  name="truck-delivery"
-                  size={14}
-                  color="#8B5CF6"
-                />
-                <ThemedText style={[styles.trackingButtonText, { color: '#8B5CF6' }]}>
-                  Track
-                </ThemedText>
-              </Pressable>
-            )}
-          </View>
-        </View>
-
-        {/* Products Grid */}
-        <View style={styles.productsContainer}>
-          {order.products.map((product, productIndex) => (
-            <View
-              key={`${product.sku}-${productIndex}`}
-              style={[
-                styles.productCard,
-                {
-                  backgroundColor: colorScheme === 'dark'
-                    ? 'rgba(31, 41, 55, 0.3)'
-                    : 'rgba(249, 250, 251, 0.8)'
-                }
-              ]}>
-              {product.image && (
-                <View style={styles.productImageContainer}>
-                  <Image
-                    source={{ uri: product.image }}
-                    style={styles.productImage}
-                    defaultSource={require('../../assets/images/react-logo.png')}
+              {order.trackingId && (
+                <Pressable
+                  onPress={handleTrackingPress}
+                  style={({ pressed }) => [
+                    styles.trackingButton,
+                    { opacity: pressed ? 0.7 : 1 }
+                  ]}
+                  android_ripple={{ color: 'rgba(22, 163, 74, 0.1)' }}>
+                  <MaterialCommunityIcons
+                    name="truck-delivery"
+                    size={14}
+                    color="#16A34A"
                   />
-                </View>
+                  <ThemedText style={styles.trackingText}>Track</ThemedText>
+                </Pressable>
               )}
-              <View style={styles.productInfo}>
-                <ThemedText type="defaultSemiBold" style={styles.productName} numberOfLines={2}>
-                  {product.details}
-                </ThemedText>
-                <View style={styles.productMeta}>
-                  <View style={[
-                    styles.chip,
-                    {
-                      backgroundColor: colorScheme === 'dark'
-                        ? 'rgba(31, 41, 55, 0.8)'
-                        : 'rgba(255, 255, 255, 0.8)'
-                    }
-                  ]}>
-                    <ThemedText style={styles.chipText}>SKU: {product.sku}</ThemedText>
-                  </View>
-                  <View style={[
-                    styles.chip,
-                    {
-                      backgroundColor: colorScheme === 'dark'
-                        ? 'rgba(31, 41, 55, 0.8)'
-                        : 'rgba(255, 255, 255, 0.8)'
-                    }
-                  ]}>
-                    <ThemedText style={styles.chipText}>Qty: {product.qty}</ThemedText>
-                  </View>
-                  <View style={[
-                    styles.chip,
-                    {
-                      backgroundColor: colorScheme === 'dark'
-                        ? 'rgba(31, 41, 55, 0.8)'
-                        : 'rgba(255, 255, 255, 0.8)'
-                    }
-                  ]}>
-                    <ThemedText style={[styles.chipText, { color: '#8B5CF6' }]}>
-                      ₹{product.sale_price}
-                    </ThemedText>
-                  </View>
-                </View>
-                {(product.colour || product.size) && (
-                  <View style={styles.productMeta}>
-                    {product.colour && (
-                      <View style={[
-                        styles.chip,
-                        {
-                          backgroundColor: colorScheme === 'dark'
-                            ? 'rgba(31, 41, 55, 0.8)'
-                            : 'rgba(255, 255, 255, 0.8)'
-                        }
-                      ]}>
-                        <ThemedText style={styles.chipText}>{product.colour}</ThemedText>
-                      </View>
-                    )}
-                    {product.size && (
-                      <View style={[
-                        styles.chip,
-                        {
-                          backgroundColor: colorScheme === 'dark'
-                            ? 'rgba(31, 41, 55, 0.8)'
-                            : 'rgba(255, 255, 255, 0.8)'
-                        }
-                      ]}>
-                        <ThemedText style={styles.chipText}>{product.size}</ThemedText>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
             </View>
-          ))}
+          </View>
         </View>
       </Pressable>
     </Animated.View>
@@ -323,16 +256,24 @@ export function FirebaseOrdersTable({
             opacity: emptyStateAnim
           }
         ]}>
-        <MaterialCommunityIcons
-          name="package-variant"
-          size={48}
-          color={colorScheme === 'dark' ? '#6B7280' : '#9CA3AF'}
-          style={styles.emptyStateIcon}
-        />
-        <ThemedText style={styles.emptyStateText}>
+        <View style={[
+          styles.emptyStateIcon,
+          {
+            backgroundColor: colorScheme === 'dark' 
+              ? 'rgba(139, 92, 246, 0.1)' 
+              : 'rgba(139, 92, 246, 0.05)'
+          }
+        ]}>
+          <MaterialCommunityIcons
+            name="package-variant"
+            size={32}
+            color="#8B5CF6"
+          />
+        </View>
+        <ThemedText type="defaultSemiBold" style={styles.emptyStateTitle}>
           No orders found
         </ThemedText>
-        <ThemedText style={styles.emptyStateSubtext}>
+        <ThemedText style={styles.emptyStateText}>
           New orders will appear here
         </ThemedText>
       </Animated.View>
@@ -343,7 +284,7 @@ export function FirebaseOrdersTable({
     <View style={styles.ordersList}>
       {orders.map((order, index) => (
         <OrderRow
-          key={`${order.id}-${order.orderId}`}
+          key={order.id}
           order={order}
           index={index}
           onPress={() => onOrderPress(order)}
@@ -360,51 +301,31 @@ const styles = StyleSheet.create({
   },
   orderRow: {
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(75, 85, 99, 0.2)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+  },
+  orderContent: {
+    padding: 12,
   },
   orderHeader: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(75, 85, 99, 0.2)',
-  },
-  orderHeaderContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   orderInfo: {
-    flex: 1,
-  },
-  orderNumberContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
     gap: 8,
   },
   orderNumber: {
     fontSize: isSmallScreen ? 14 : 15,
-  },
-  orderNumberHash: {
     color: '#8B5CF6',
-    fontWeight: '700',
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -412,68 +333,58 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: isSmallScreen ? 10 : 11,
     fontWeight: '600',
-    letterSpacing: 0.5,
+  },
+  orderTotal: {
+    fontSize: isSmallScreen ? 14 : 15,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  customerInfo: {
+    gap: 8,
+  },
+  customerDetails: {
+    gap: 4,
+  },
+  customerNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  customerName: {
+    fontSize: isSmallScreen ? 13 : 14,
+  },
+  orderMetaInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  metaInfoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: isSmallScreen ? 11 : 12,
+    opacity: 0.7,
   },
   trackingButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 6,
     paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
   },
-  trackingButtonText: {
-    fontSize: isSmallScreen ? 12 : 13,
-    fontWeight: '600',
-  },
-  productsContainer: {
-    padding: 12,
-    gap: 8,
-  },
-  productCard: {
-    flexDirection: 'row',
-    gap: 8,
-    padding: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-  },
-  productImageContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  productInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  productName: {
-    fontSize: isSmallScreen ? 13 : 14,
-  },
-  productMeta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  chip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(75, 85, 99, 0.2)',
-  },
-  chipText: {
+  trackingText: {
     fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.8,
+    color: '#16A34A',
+    fontWeight: '600',
   },
   emptyState: {
     padding: 32,
@@ -497,17 +408,17 @@ const styles = StyleSheet.create({
     }),
   },
   emptyStateIcon: {
-    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    marginBottom: 8,
   },
   emptyStateText: {
-    fontSize: isSmallScreen ? 15 : 16,
-    fontWeight: '600',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  emptyStateSubtext: {
-    fontSize: isSmallScreen ? 13 : 14,
     opacity: 0.7,
+    fontSize: 14,
     textAlign: 'center',
   },
 }); 

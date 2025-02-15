@@ -26,7 +26,7 @@ import { FirebaseOrder } from '../../types/firebase-order';
 import { formatDate } from '../../utils/date';
 import { getTrackingUrl } from '../../services/api/tracking';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 const isSmallScreen = Dimensions.get('window').width < 380;
 
 interface FirebaseOrderDetailsSheetProps {
@@ -40,11 +40,14 @@ const ProductCard = memo(({ product, colorScheme }: {
   product: FirebaseOrder['products'][0];
   colorScheme: ColorSchemeName;
 }) => {
-  const handleProductPress = useCallback(() => {
-    if (product.product_page_url) {
-      Linking.openURL(product.product_page_url);
+  const [isPreviewVisible, setIsPreviewVisible] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
+  const handleImagePress = useCallback(() => {
+    if (!imageError && product.image) {
+      setIsPreviewVisible(true);
     }
-  }, [product.product_page_url]);
+  }, [imageError, product.image]);
 
   const handleDesignPress = useCallback(() => {
     if (product.downloaddesign) {
@@ -59,63 +62,97 @@ const ProductCard = memo(({ product, colorScheme }: {
     ]}>
       <View style={styles.productContent}>
         {product.image && (
-          <Image
-            source={{ uri: product.image }}
-            style={styles.productImage}
-            defaultSource={require('../../assets/images/placeholder.png')}
-          />
+          <Pressable 
+            style={[
+              styles.productImageContainer,
+              !imageError && product.image && styles.clickableImage
+            ]}
+            onPress={handleImagePress}
+          >
+            <Image
+              source={{ uri: product.image }}
+              style={styles.productImage}
+              defaultSource={require('../../assets/images/placeholder.png')}
+              onError={() => setImageError(true)}
+            />
+          </Pressable>
         )}
         <View style={styles.productInfo}>
-          <ThemedText type="defaultSemiBold" style={styles.productName} numberOfLines={2}>
-            {product.details}
-          </ThemedText>
-          <View style={styles.productMeta}>
-            <View style={[styles.chip, { backgroundColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(255, 255, 255, 0.8)' }]}>
-              <ThemedText style={styles.chipText}>SKU: {product.sku}</ThemedText>
-            </View>
-            <View style={[styles.chip, { backgroundColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(255, 255, 255, 0.8)' }]}>
-              <ThemedText style={styles.chipText}>Qty: {product.qty}</ThemedText>
-            </View>
-            <View style={[styles.chip, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }]}>
-              <ThemedText style={[styles.chipText, { color: '#8B5CF6' }]}>₹{product.sale_price}</ThemedText>
-            </View>
+          <View style={styles.productTitleRow}>
+            <ThemedText type="defaultSemiBold" style={styles.productName} numberOfLines={2}>
+              {product.details}
+            </ThemedText>
+            <ThemedText style={styles.productPrice}>₹{product.sale_price}</ThemedText>
           </View>
-          {(product.colour || product.size) && (
-            <View style={styles.productMeta}>
-              {product.colour && (
-                <View style={[styles.chip, { backgroundColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(255, 255, 255, 0.8)' }]}>
-                  <ThemedText style={styles.chipText}>{product.colour}</ThemedText>
-                </View>
-              )}
-              {product.size && (
-                <View style={[styles.chip, { backgroundColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(255, 255, 255, 0.8)' }]}>
-                  <ThemedText style={styles.chipText}>{product.size}</ThemedText>
-                </View>
-              )}
+          <View style={styles.productMetaRow}>
+            <View style={styles.skuContainer}>
+              <ThemedText style={styles.metaText}>SKU: {product.sku}</ThemedText>
+              <View style={styles.bulletPoint} />
+              <ThemedText style={styles.metaText}>Qty: {product.qty}</ThemedText>
             </View>
-          )}
-          <View style={styles.productActions}>
-            {product.product_page_url && (
-              <Pressable
-                style={[styles.actionButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }]}
-                onPress={handleProductPress}
-                android_ripple={{ color: 'rgba(139, 92, 246, 0.1)' }}>
-                <MaterialCommunityIcons name="link" size={16} color="#8B5CF6" />
-                <ThemedText style={[styles.actionButtonText, { color: '#8B5CF6' }]}>View Product</ThemedText>
-              </Pressable>
+            {(product.colour || product.size) && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.variantsScroll}
+                contentContainerStyle={styles.variantsScrollContent}
+              >
+                {product.colour && (
+                  <View style={[
+                    styles.variantBadge,
+                    { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }
+                  ]}>
+                    <ThemedText style={styles.variantText}>{product.colour}</ThemedText>
+                  </View>
+                )}
+                {product.size && (
+                  <View style={[
+                    styles.variantBadge,
+                    { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' },
+                    product.colour && styles.variantBadgeMargin
+                  ]}>
+                    <ThemedText style={styles.variantText}>{product.size}</ThemedText>
+                  </View>
+                )}
+              </ScrollView>
             )}
-            {product.downloaddesign && (
+          </View>
+          {product.downloaddesign && (
+            <View style={styles.productActions}>
               <Pressable
                 style={[styles.actionButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.05)' }]}
                 onPress={handleDesignPress}
                 android_ripple={{ color: 'rgba(139, 92, 246, 0.1)' }}>
-                <MaterialCommunityIcons name="download" size={16} color="#8B5CF6" />
-                <ThemedText style={[styles.actionButtonText, { color: '#8B5CF6' }]}>Download Design</ThemedText>
+                <MaterialCommunityIcons name="download" size={14} color="#8B5CF6" />
+                <ThemedText style={[styles.actionButtonText, { color: '#8B5CF6' }]}>Download</ThemedText>
               </Pressable>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </View>
+
+      {/* Image Preview Modal */}
+      {product.image && (
+        <Modal
+          transparent
+          visible={isPreviewVisible}
+          onRequestClose={() => setIsPreviewVisible(false)}
+          animationType="fade"
+        >
+          <Pressable 
+            style={styles.previewBackdrop}
+            onPress={() => setIsPreviewVisible(false)}
+          >
+            <Animated.View style={[styles.previewImageContainer]}>
+              <Image
+                source={{ uri: product.image }}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 });
@@ -413,48 +450,90 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  productImage: {
-    width: 80,
-    height: 80,
+  productImageContainer: {
+    width: 60,
+    height: 60,
     borderRadius: 8,
+    overflow: 'hidden',
     backgroundColor: 'rgba(75, 85, 99, 0.1)',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
   },
   productInfo: {
     flex: 1,
   },
+  productTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
   productName: {
     fontSize: isSmallScreen ? 13 : 14,
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
   },
-  productMeta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  productPrice: {
+    fontSize: isSmallScreen ? 14 : 15,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  productMetaRow: {
+    flexDirection: 'column',
     gap: 4,
-    marginBottom: 4,
   },
-  chip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 12,
+  skuContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  chipText: {
+  metaText: {
     fontSize: isSmallScreen ? 11 : 12,
-    opacity: 0.8,
+    opacity: 0.7,
+  },
+  bulletPoint: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(75, 85, 99, 0.5)',
+    marginHorizontal: 6,
+  },
+  variantsScroll: {
+    marginTop: 4,
+  },
+  variantsScrollContent: {
+    flexDirection: 'row',
+  },
+  variantBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  variantBadgeMargin: {
+    marginLeft: 6,
+  },
+  variantText: {
+    fontSize: isSmallScreen ? 10 : 11,
+    fontWeight: '500',
+    color: '#8B5CF6',
   },
   productActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
+    marginTop: 8,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   actionButtonText: {
-    fontSize: isSmallScreen ? 11 : 12,
+    fontSize: isSmallScreen ? 10 : 11,
     fontWeight: '500',
   },
   timelineContainer: {
@@ -511,5 +590,25 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 32,
+  },
+  clickableImage: {
+    cursor: 'pointer',
+  },
+  previewBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewImageContainer: {
+    width: width * 0.9,
+    height: height * 0.6,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
   },
 }); 
