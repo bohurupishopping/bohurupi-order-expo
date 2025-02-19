@@ -149,7 +149,15 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
     <View style={[
       styles.orderItem,
       isLast && styles.lastOrderItem,
-      { backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.7)' : 'rgba(255, 255, 255, 0.8)' }
+      {
+        backgroundColor: colorScheme === 'dark' 
+          ? 'rgba(30, 41, 59, 0.7)' 
+          : 'rgba(255, 255, 255, 0.9)',
+        borderColor: colorScheme === 'dark' 
+          ? 'rgba(255, 255, 255, 0.1)' 
+          : 'rgba(0, 0, 0, 0.05)',
+        borderWidth: 1
+      }
     ]}>
       <View style={styles.itemRow}>
         {/* Image */}
@@ -178,7 +186,10 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
             <ThemedText type="defaultSemiBold" style={styles.itemName} numberOfLines={2}> {/* Increased numberOfLines */}
               {item.name}
             </ThemedText>
-            <ThemedText style={styles.itemPrice}>
+            <ThemedText style={[
+              styles.itemPrice,
+              { color: colorScheme === 'dark' ? '#A78BFA' : '#8B5CF6' }
+            ]}>
               {currency} {itemTotal}
             </ThemedText>
           </View>
@@ -206,14 +217,13 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
                     key={idx}
                     style={[
                       styles.variantBadge,
-                      idx !== variants.length - 1 && styles.variantBadgeMargin,
                       {
                         backgroundColor: colorScheme === 'dark'
                           ? variant.type === 'full-sleeve'
-                            ? 'rgba(217, 70, 239, 0.3)'  // Increased opacity
+                            ? 'rgba(192, 132, 252, 0.3)'
                             : variant.type === 'children'
-                              ? 'rgba(236, 72, 153, 0.3)'  // Increased opacity
-                              : 'rgba(139, 92, 246, 0.3)'  // Increased opacity
+                              ? 'rgba(244, 114, 182, 0.3)'
+                              : 'rgba(139, 92, 246, 0.3)'
                           : variant.type === 'full-sleeve'
                             ? 'rgba(217, 70, 239, 0.2)'
                             : variant.type === 'children'
@@ -221,7 +231,10 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
                               : 'rgba(139, 92, 246, 0.2)'
                       }
                     ]}>
-                    <ThemedText style={styles.variantText}>
+                    <ThemedText style={[
+                      styles.variantText,
+                      { color: colorScheme === 'dark' ? '#E9D5FF' : '#6D28D9' }
+                    ]}>
                       {variant.label}: {variant.value}
                     </ThemedText>
                   </View>
@@ -237,8 +250,12 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
           styles.customizationContainer,
           {
             backgroundColor: colorScheme === 'dark' 
-              ? 'rgba(139, 92, 246, 0.2)'  // Increased opacity
-              : 'rgba(139, 92, 246, 0.1)'  // Increased opacity
+              ? 'rgba(139, 92, 246, 0.25)' 
+              : 'rgba(139, 92, 246, 0.15)',
+            borderColor: colorScheme === 'dark' 
+              ? 'rgba(139, 92, 246, 0.4)' 
+              : 'rgba(139, 92, 246, 0.2)',
+            borderWidth: 1
           }
         ]}>
           <ThemedText type="defaultSemiBold" style={styles.customizationTitle}>
@@ -257,7 +274,18 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
         <View style={styles.linksContainer}>
           {productUrl && (
             <Pressable
-              style={[styles.linkButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)' }]}
+              style={[
+                styles.linkButton, 
+                { 
+                  backgroundColor: colorScheme === 'dark' 
+                    ? 'rgba(139, 92, 246, 0.4)' 
+                    : 'rgba(139, 92, 246, 0.2)',
+                  borderColor: colorScheme === 'dark' 
+                    ? 'rgba(139, 92, 246, 0.6)' 
+                    : 'rgba(139, 92, 246, 0.3)',
+                  borderWidth: 1
+                }
+              ]}
               onPress={() => handleLinkPress(productUrl)}
             >
               <MaterialCommunityIcons name="link-variant" size={18} color="#8B5CF6" />
@@ -266,7 +294,18 @@ function OrderItem({ item, currency, isLast }: { item: WooLineItem; currency: st
           )}
           {downloadUrl && (
             <Pressable
-              style={[styles.linkButton, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)' }]}
+              style={[
+                styles.linkButton, 
+                { 
+                  backgroundColor: colorScheme === 'dark' 
+                    ? 'rgba(139, 92, 246, 0.4)' 
+                    : 'rgba(139, 92, 246, 0.2)',
+                  borderColor: colorScheme === 'dark' 
+                    ? 'rgba(139, 92, 246, 0.6)' 
+                    : 'rgba(139, 92, 246, 0.3)',
+                  borderWidth: 1
+                }
+              ]}
               onPress={() => handleLinkPress(downloadUrl)}
             >
               <MaterialCommunityIcons name="download-outline" size={18} color="#8B5CF6" />
@@ -307,22 +346,40 @@ function Section({
   return (
     <View style={[styles.section, containerStyle]}>
       <View style={styles.sectionHeader}>
-        <View style={[styles.sectionIcon, { backgroundColor: `${color}20` }]}> {/* Increased opacity */}
+        <View style={[
+          styles.sectionIcon,
+          { 
+            backgroundColor: colorScheme === 'dark' 
+              ? `${color}30` 
+              : `${color}20`
+          }
+        ]}>
           <MaterialCommunityIcons
             name={icon}
-            size={20} // Slightly larger icon
-            color={color}
+            size={20}
+            color={colorScheme === 'dark' ? lightenColor(color, 20) : color}
           />
         </View>
-        <ThemedText type="defaultSemiBold" style={[styles.sectionTitle, { color }]}>
+        <ThemedText 
+          type="defaultSemiBold" 
+          style={[
+            styles.sectionTitle, 
+            { color: colorScheme === 'dark' ? lightenColor(color, 20) : color }
+          ]}
+        >
           {title}
         </ThemedText>
       </View>
       <View style={[
         styles.sectionContent,
         {
-          backgroundColor: colorScheme === 'dark' ? 'rgba(45, 55, 72, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-          borderColor: colorScheme === 'dark' ? 'rgba(107, 114, 128, 0.6)' : 'rgba(209, 213, 219, 0.8)'
+          backgroundColor: colorScheme === 'dark' 
+            ? 'rgba(30, 41, 59, 0.7)' 
+            : 'rgba(255, 255, 255, 0.9)',
+          borderColor: colorScheme === 'dark' 
+            ? 'rgba(255, 255, 255, 0.1)' 
+            : 'rgba(0, 0, 0, 0.05)',
+          borderWidth: 1
         }
       ]}>
         {children}
@@ -424,8 +481,12 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
               styles.header,
               {
                 backgroundColor: colorScheme === 'dark' 
-                  ? 'rgba(168, 85, 247, 0.2)'
-                  : 'rgba(168, 85, 247, 0.1)'
+                  ? 'rgba(30, 41, 59, 0.95)' 
+                  : 'rgba(233, 213, 255, 0.2)',
+                borderBottomColor: colorScheme === 'dark' 
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(0, 0, 0, 0.05)',
+                borderBottomWidth: 1
               }
             ]}>
               <Pressable
@@ -433,15 +494,19 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                   styles.closeButton,
                   {
                     backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(45, 55, 72, 0.8)'
-                      : 'rgba(249, 250, 251, 0.9)'
+                      ? 'rgba(255, 255, 255, 0.1)' 
+                      : 'rgba(0, 0, 0, 0.05)',
+                    borderColor: colorScheme === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.15)' 
+                      : 'transparent',
+                    borderWidth: 1
                   }
                 ]}
                 onPress={handleDismiss}>
                 <MaterialCommunityIcons 
-                  name="close" // Changed to close icon
+                  name="close" 
                   size={24}
-                  color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'}
+                  color={colorScheme === 'dark' ? '#E2E8F0' : '#374151'}
                 />
               </Pressable>
 
@@ -450,17 +515,23 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                   styles.headerIconContainer,
                   {
                     backgroundColor: colorScheme === 'dark' 
-                      ? 'rgba(139, 92, 246, 0.3)'  // Increased opacity
-                      : 'rgba(139, 92, 246, 0.2)'  // Increased opacity
+                      ? 'rgba(139, 92, 246, 0.3)' 
+                      : 'rgba(139, 92, 246, 0.2)'
                   }
                 ]}>
                   <MaterialCommunityIcons
-                    name="package-variant-closed" // More specific icon
-                    size={22} // Slightly larger icon
-                    color="#8B5CF6"
+                    name="package-variant-closed"
+                    size={22}
+                    color={colorScheme === 'dark' ? '#A78BFA' : '#8B5CF6'}
                   />
                 </View>
-                <ThemedText type="title" style={styles.orderNumber}>
+                <ThemedText 
+                  type="title" 
+                  style={[
+                    styles.orderNumber,
+                    { color: colorScheme === 'dark' ? '#F8FAFC' : '#1E293B' }
+                  ]}
+                >
                   Order #{order.number}
                 </ThemedText>
               </View>
@@ -469,16 +540,22 @@ export function WooOrderDetailsDialog({ order, visible, onClose }: WooOrderDetai
                 <View style={styles.dateContainer}>
                   <MaterialCommunityIcons
                     name="calendar"
-                    size={16} // Slightly larger icon
-                    color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                    size={16}
+                    color={colorScheme === 'dark' ? '#94A3B8' : '#64748B'}
                   />
-                  <ThemedText style={styles.date}>
+                  <ThemedText style={[
+                    styles.date,
+                    { color: colorScheme === 'dark' ? '#CBD5E1' : '#475569' }
+                  ]}>
                     {format(new Date(order.date_created), 'PPP p')}
                   </ThemedText>
                 </View>
 
                 <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
-                  <ThemedText style={[styles.statusText, { color: textColor }]}>
+                  <ThemedText style={[
+                    styles.statusText, 
+                    { color: colorScheme === 'dark' ? textColor : '#1E293B' }
+                  ]}>
                     {order.status.toUpperCase()}
                   </ThemedText>
                 </View>
@@ -972,4 +1049,27 @@ const styles = StyleSheet.create({
   clickableImage: {
     cursor: 'pointer',
   },
-}); 
+});
+
+function lightenColor(hex: string, percent: number): string {
+  // Remove # if present
+  const formattedHex = hex.replace(/^#/, '');
+  
+  // Parse hex values
+  const bigint = parseInt(formattedHex, 16);
+  let r = (bigint >> 16) & 255;
+  let g = (bigint >> 8) & 255;
+  let b = bigint & 255;
+
+  // Lighten each color channel
+  r = Math.min(255, r + (255 - r) * (percent / 100));
+  g = Math.min(255, g + (255 - g) * (percent / 100));
+  b = Math.min(255, b + (255 - b) * (percent / 100));
+
+  // Convert back to hex and pad with zeros
+  return `#${[
+    Math.round(r).toString(16).padStart(2, '0'),
+    Math.round(g).toString(16).padStart(2, '0'),
+    Math.round(b).toString(16).padStart(2, '0')
+  ].join('')}`;
+} 

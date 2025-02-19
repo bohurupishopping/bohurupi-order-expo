@@ -19,13 +19,13 @@ const STATUS_COLORS = {
     bg: '#FFF3C820',
     text: '#D97706',
     rowBg: '#FFFBEB',
-    dark: { bg: '#42200630', text: '#FACC15', rowBg: '#33200620' }
+    dark: { bg: '#422006AA', text: '#FACC15', rowBg: '#332006AA' }
   },
   completed: {
     bg: '#E5E7EB30',
     text: '#6B7280',
     rowBg: '#F9FAFB',
-    dark: { bg: '#37415130', text: '#D1D5DB', rowBg: '#1F293720' }
+    dark: { bg: '#374151AA', text: '#E5E7EB', rowBg: '#1F2937AA' }
   }
 } as const;
 
@@ -34,13 +34,13 @@ const ORDER_STATUS_COLORS = {
     bg: '#FFEDD530',
     text: '#EA580C',
     rowBg: '#FFF7ED',
-    dark: { bg: '#43140730', text: '#F97316', rowBg: '#43140720' }
+    dark: { bg: '#431407AA', text: '#FB923C', rowBg: '#431407AA' }
   },
   prepaid: {
     bg: '#BFDBFE30',
     text: '#2563EB',
     rowBg: '#EFF6FF',
-    dark: { bg: '#17255430', text: '#3B82F6', rowBg: '#17255420' }
+    dark: { bg: '#172554AA', text: '#60A5FA', rowBg: '#172554AA' }
   }
 } as const;
 
@@ -408,14 +408,11 @@ const styles = StyleSheet.create({
   orderRowContainer: {
     marginBottom: 12,
     borderRadius: 16,
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
   },
   orderRow: {
     borderRadius: 16,
     overflow: 'hidden',
-  },
-  orderRowPressed: {
-    transform: [{ scale: 0.98 }],
   },
   orderContent: {
     padding: 12,

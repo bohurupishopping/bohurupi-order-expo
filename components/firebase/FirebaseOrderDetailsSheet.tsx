@@ -58,7 +58,14 @@ const ProductCard = memo(({ product, colorScheme }: {
   return (
     <View style={[
       styles.productCard,
-      { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.7)' : 'rgba(255, 255, 255, 0.8)' },
+      { 
+        backgroundColor: colorScheme === 'dark' 
+          ? 'rgba(30, 41, 59, 0.7)' 
+          : 'rgba(255, 255, 255, 0.8)',
+        borderColor: colorScheme === 'dark' 
+          ? 'rgba(255, 255, 255, 0.1)' 
+          : 'rgba(0, 0, 0, 0.05)'
+      }
     ]}>
       <View style={styles.productContent}>
         {product.image && (
@@ -213,6 +220,15 @@ export const FirebaseOrderDetailsSheet = memo(({
 
   if (!order) return null;
 
+  console.log('Order data:', {
+    id: order.id,
+    orderId: order.orderId,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+    formattedCreated: formatDate(order.createdAt),
+    formattedUpdated: formatDate(order.updatedAt)
+  });
+
   return (
     <Modal
       visible={visible}
@@ -231,35 +247,72 @@ export const FirebaseOrderDetailsSheet = memo(({
             <View style={[
               styles.header,
               {
-                backgroundColor: '#dff2ef',
+                backgroundColor: colorScheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : '#dff2ef',
+                borderBottomColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                borderBottomWidth: 1
               }
             ]}>
               <Pressable
                 style={[
                   styles.closeButton,
+                  {
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                  }
                 ]}
                 onPress={handleDismiss}
                 >
-                <MaterialCommunityIcons name="close" size={24} color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'} />
+                <MaterialCommunityIcons 
+                  name="close" 
+                  size={24} 
+                  color={colorScheme === 'dark' ? '#E2E8F0' : '#374151'} 
+                />
               </Pressable>
 
               <View style={styles.headerContent}>
                 <View style={[
-                    styles.headerIconContainer,
-                  ]}>
-                  <MaterialCommunityIcons name="package-variant-closed" size={24} color="#8B5CF6" />
+                  styles.headerIconContainer,
+                  {
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)'
+                  }
+                ]}>
+                  <MaterialCommunityIcons 
+                    name="package-variant-closed" 
+                    size={24} 
+                    color={colorScheme === 'dark' ? '#8B5CF6' : '#7C3AED'} 
+                  />
                 </View>
-                <ThemedText type="title" style={styles.orderTitle}>Order #{order.orderId}</ThemedText>
+                <ThemedText 
+                  type="title" 
+                  style={[styles.orderTitle, { color: colorScheme === 'dark' ? '#F8FAFC' : '#1E293B' }]}
+                >
+                  Order #{order.orderId}
+                </ThemedText>
               </View>
 
               <View style={styles.headerMeta}>
                 <View style={styles.customerInfo}>
-                  <MaterialCommunityIcons name="account-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
-                  <ThemedText style={styles.customerName}>{order.customerName}</ThemedText>
+                  <MaterialCommunityIcons 
+                    name="account-outline" 
+                    size={16} 
+                    color={colorScheme === 'dark' ? '#94A3B8' : '#64748B'} 
+                  />
+                  <ThemedText 
+                    style={[styles.customerName, { color: colorScheme === 'dark' ? '#CBD5E1' : '#475569' }]}
+                  >
+                    {order.customerName}
+                  </ThemedText>
                 </View>
                 <View style={styles.dateInfo}>
-                  <MaterialCommunityIcons name="clock-outline" size={16} color={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
-                  <ThemedText style={styles.date}>{formatDate(order.createdAt)}</ThemedText>
+                  <MaterialCommunityIcons 
+                    name="clock-outline" 
+                    size={16} 
+                    color={colorScheme === 'dark' ? '#94A3B8' : '#64748B'} 
+                  />
+                  <ThemedText 
+                    style={[styles.date, { color: colorScheme === 'dark' ? '#CBD5E1' : '#475569' }]}
+                  >
+                    {formatDate(order.createdAt)}
+                  </ThemedText>
                 </View>
               </View>
             </View>
@@ -309,11 +362,27 @@ export const FirebaseOrderDetailsSheet = memo(({
                     <ThemedText type="defaultSemiBold" style={styles.trackingId}>Tracking ID: {order.trackingId}</ThemedText>
                     <View style={styles.shippingActions}>
                       <Pressable
-                        style={[styles.shippingButton, styles.outlineButton, { borderColor: colorScheme === 'dark' ? 'rgba(159, 122, 234, 0.4)' : 'rgba(139, 92, 246, 0.4)'}]}
+                        style={[
+                          styles.shippingButton, 
+                          styles.outlineButton, 
+                          { 
+                            borderColor: colorScheme === 'dark' 
+                              ? 'rgba(165, 180, 252, 0.4)' 
+                              : 'rgba(139, 92, 246, 0.4)'
+                          }
+                        ]}
                         onPress={handleTrackingPress}
                         android_ripple={{ color: 'rgba(139, 92, 246, 0.2)' }}>
-                        <MaterialCommunityIcons name="truck-delivery-outline" size={18} color="#8B5CF6" />
-                        <ThemedText style={[styles.buttonText, { color: '#8B5CF6' }]}>Track on Delhivery</ThemedText>
+                        <MaterialCommunityIcons 
+                          name="truck-delivery-outline" 
+                          size={18} 
+                          color={colorScheme === 'dark' ? '#A5B4FC' : '#8B5CF6'} 
+                        />
+                        <ThemedText style={[styles.buttonText, { 
+                          color: colorScheme === 'dark' ? '#A5B4FC' : '#8B5CF6' 
+                        }]}>
+                          Track on Delhivery
+                        </ThemedText>
                       </Pressable>
                       <Pressable
                        style={[

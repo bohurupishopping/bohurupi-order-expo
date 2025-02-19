@@ -49,7 +49,24 @@ export async function fetchFirebaseOrders(status?: 'pending' | 'completed', sear
     }
     
     const data = await response.json();
-    return data.orders;
+    return data.orders.map((order: any) => {
+      // Validate dates
+      const validateDate = (date: any) => {
+        if (!date) return new Date(); // Fallback to current date
+        try {
+          const d = new Date(date);
+          return isNaN(d.getTime()) ? new Date() : d;
+        } catch {
+          return new Date(); // Fallback to current date
+        }
+      };
+
+      return {
+        ...order,
+        createdAt: validateDate(order.createdAt),
+        updatedAt: validateDate(order.updatedAt)
+      };
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error instanceof Error ? error : new Error('Failed to fetch orders');
@@ -109,10 +126,16 @@ export async function createFirebaseOrder(orderData: Partial<FirebaseOrder>): Pr
 
 export async function updateFirebaseOrder(id: string, orderData: Partial<FirebaseOrder>): Promise<FirebaseOrder> {
   try {
+    // Convert dates to ISO strings before sending
+    const payload = {
+      ...orderData,
+      updatedAt: new Date().toISOString() // Ensure ISO string format
+    };
+
     const response = await fetch(`${BASE_URL}/firebase/orders`, {
       method: 'PUT',
       headers,
-      body: JSON.stringify({ id, ...orderData }),
+      body: JSON.stringify({ id, ...payload }),
     });
 
     if (!response.ok) {

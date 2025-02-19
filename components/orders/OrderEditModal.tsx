@@ -177,14 +177,20 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
         </Animated.View>
 
         <Animated.View style={[styles.modalContainer, modalStyle]}>
-          <View style={[styles.modalContent, { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF' }]}>
+          <View style={[styles.modalContent, { backgroundColor: colorScheme === 'dark' ? '#111827' : '#FFFFFF' }]}>
             <View style={styles.dragHandle} />
 
-            <View style={[styles.header, { backgroundColor: colorScheme === 'dark' ? 'rgba(88, 28, 135, 0.1)' : 'rgba(139, 92, 246, 0.1)' }]}>
+            <View style={[styles.header, { 
+              backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(249, 250, 251, 0.9)',
+              borderBottomColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.4)' : 'rgba(229, 231, 235, 0.4)'
+            }]}>
               <Pressable
                 style={[
                   styles.closeButton,
-                  { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.8)' }
+                  { 
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    borderColor: colorScheme === 'dark' ? 'rgba(75, 85, 99, 0.3)' : 'rgba(209, 213, 219, 0.3)'
+                  }
                 ]}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                 onPress={handleDismiss}
@@ -192,19 +198,22 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
                 <MaterialCommunityIcons 
                   name="close"
                   size={24}
-                  color={colorScheme === 'dark' ? '#E5E7EB' : '#374151'}
+                  color={colorScheme === 'dark' ? '#D1D5DB' : '#4B5563'}
                 />
               </Pressable>
 
               <View style={styles.headerContent}>
-                <View style={[styles.headerIconContainer, { backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}>
+                <View style={[styles.headerIconContainer, { 
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.1)',
+                  borderColor: colorScheme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)'
+                }]}>
                   <MaterialCommunityIcons
                     name="pencil"
                     size={20}
                     color="#8B5CF6"
                   />
                 </View>
-                <ThemedText type="title" style={styles.formTitle}>
+                <ThemedText type="title" style={[styles.formTitle, { color: colorScheme === 'dark' ? '#F3F4F6' : '#1F2937' }]}>
                   Edit Order
                 </ThemedText>
               </View>
@@ -212,48 +221,86 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
 
             <View style={styles.formContent}>
               <FormField label="Order Status">
-                <View style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
+                <View style={[styles.input, { 
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: colorScheme === 'dark' ? 'rgba(79, 70, 229, 0.4)' : 'rgba(139, 92, 246, 0.4)'
+                }]}>
                   <Picker
                     selectedValue={formData.status}
                     onValueChange={(value: string) => handleChange('status', value)}
-                    style={styles.picker}
+                    style={[styles.picker, { color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }]}
+                    dropdownIconColor={colorScheme === 'dark' ? '#E5E7EB' : '#6B7280'}
                   >
-                    <Picker.Item label="PENDING" value="pending" />
-                    <Picker.Item label="COMPLETED" value="completed" />
+                    <Picker.Item 
+                      label="PENDING" 
+                      value="pending" 
+                      style={{ color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }} 
+                    />
+                    <Picker.Item 
+                      label="COMPLETED" 
+                      value="completed" 
+                      style={{ color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }}
+                    />
                   </Picker>
                 </View>
               </FormField>
 
               <FormField label="Payment Status">
-                <View style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}>
+                <View style={[styles.input, { 
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                  borderColor: colorScheme === 'dark' ? 'rgba(79, 70, 229, 0.4)' : 'rgba(139, 92, 246, 0.4)'
+                }]}>
                   <Picker
                     selectedValue={formData.orderstatus}
                     onValueChange={(value: string) => handleChange('orderstatus', value)}
-                    style={styles.picker}
+                    style={[styles.picker, { color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }]}
+                    dropdownIconColor={colorScheme === 'dark' ? '#E5E7EB' : '#6B7280'}
                   >
-                    <Picker.Item label="Prepaid" value="Prepaid" />
-                    <Picker.Item label="COD" value="COD" />
+                    <Picker.Item 
+                      label="Prepaid" 
+                      value="Prepaid" 
+                      style={{ color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }}
+                    />
+                    <Picker.Item 
+                      label="COD" 
+                      value="COD" 
+                      style={{ color: colorScheme === 'dark' ? '#E5E7EB' : '#1F2937' }}
+                    />
                   </Picker>
                 </View>
               </FormField>
 
               <FormField label="Tracking/AWB Number">
                 <TextInput
-                  style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}
+                  style={[
+                    styles.input, 
+                    { 
+                      backgroundColor: colorScheme === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      color: colorScheme === 'dark' ? '#F3F4F6' : '#1F2937',
+                      borderColor: colorScheme === 'dark' ? 'rgba(79, 70, 229, 0.4)' : 'rgba(139, 92, 246, 0.4)'
+                    }
+                  ]}
                   value={formData.trackingId}
                   onChangeText={(value) => handleChange('trackingId', value)}
                   placeholder="Enter tracking number"
-                  placeholderTextColor={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                  placeholderTextColor={colorScheme === 'dark' ? '#6B7280' : '#9CA3AF'}
                 />
               </FormField>
 
               <FormField label="Design URL">
                 <TextInput
-                  style={[styles.input, { backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)' }]}
+                  style={[
+                    styles.input, 
+                    { 
+                      backgroundColor: colorScheme === 'dark' ? 'rgba(17, 24, 39, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      color: colorScheme === 'dark' ? '#F3F4F6' : '#1F2937',
+                      borderColor: colorScheme === 'dark' ? 'rgba(79, 70, 229, 0.4)' : 'rgba(139, 92, 246, 0.4)'
+                    }
+                  ]}
                   value={formData.designUrl}
                   onChangeText={(value) => handleChange('designUrl', value)}
                   placeholder="Enter design URL"
-                  placeholderTextColor={colorScheme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                  placeholderTextColor={colorScheme === 'dark' ? '#6B7280' : '#9CA3AF'}
                 />
               </FormField>
             </View>
@@ -265,12 +312,15 @@ export function OrderEditModal({ isOpen, onClose, selectedOrder, onSuccess }: Or
                   styles.cancelButton,
                   {
                     opacity: pressed ? 0.7 : 1,
-                    backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.5)' : 'rgba(255, 255, 255, 0.5)'
+                    backgroundColor: colorScheme === 'dark' ? 'rgba(31, 41, 55, 0.7)' : 'rgba(249, 250, 251, 0.7)',
+                    borderColor: colorScheme === 'dark' ? 'rgba(55, 65, 81, 0.4)' : 'rgba(209, 213, 219, 0.4)'
                   }
                 ]}
                 onPress={handleDismiss}
               >
-                <ThemedText>Cancel</ThemedText>
+                <ThemedText style={{ color: colorScheme === 'dark' ? '#E5E7EB' : '#374151' }}>
+                  Cancel
+                </ThemedText>
               </Pressable>
 
               <Pressable

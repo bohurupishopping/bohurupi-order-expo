@@ -56,24 +56,49 @@ function RecentActivityCard({ activity }: { activity: DashboardMetricsType['rece
         style={({ pressed }) => [
           styles.activityCard,
           {
-            backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            // borderWidth: 1, // Removed border
-            // borderColor: colorScheme === 'dark' ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)', // Removed border
-          },
-          // styles.cardShadow, // Removed shadow
+            backgroundColor: colorScheme === 'dark' ? '#111827' : '#FFFFFF',
+            borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+            borderWidth: 1,
+          }
         ]}
       >
         <View style={styles.activityHeader}>
-          <View style={[styles.activityAvatar, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#E2E8F0' }]}>
-            <ThemedText style={{color: colorScheme === 'dark' ? '#fff' : '#000'}}>{activity.user.name[0]}</ThemedText>
+          <View style={[
+            styles.activityAvatar, 
+            { 
+              backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#E2E8F0',
+              borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+              borderWidth: 1
+            }
+          ]}>
+            <ThemedText style={{
+              color: colorScheme === 'dark' ? '#E5E7EB' : '#1F293B',
+              fontWeight: '600'
+            }}>
+              {activity.user.name[0]}
+            </ThemedText>
           </View>
           <View style={styles.activityContent}>
-            <ThemedText type="defaultSemiBold">{activity.user.name}</ThemedText>
-            <ThemedText style={styles.activityAction}>{activity.action}</ThemedText>
+            <ThemedText 
+              type="defaultSemiBold" 
+              style={{ color: colorScheme === 'dark' ? '#F3F4F6' : '#1F293B' }}
+            >
+              {activity.user.name}
+            </ThemedText>
+            <ThemedText style={[
+              styles.activityAction,
+              { color: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280' }
+            ]}>
+              {activity.action}
+            </ThemedText>
           </View>
         </View>
-        <ThemedText style={styles.activityTime}>{activity.timestamp}</ThemedText>
+        <ThemedText style={[
+          styles.activityTime,
+          { color: colorScheme === 'dark' ? '#6B7280' : '#9CA3AF' }
+        ]}>
+          {activity.timestamp}
+        </ThemedText>
       </Pressable>
     </Animated.View>
   );
@@ -149,7 +174,10 @@ export default function HomeScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>  {/* Use SafeAreaView as the top-level container */}
+    <SafeAreaView style={[
+      styles.safeArea, 
+      { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#F5F5F5' }
+    ]}>
         <Animated.View style={[
         styles.header,
         {
@@ -161,23 +189,29 @@ export default function HomeScreen() {
       ]}>
         <LinearGradient
            colors={colorScheme === 'dark'
-            ? ['#1F2937', '#111827'] // Darker, more refined gradient
+            ? ['#111827', '#1F2937'] // Darker gradient
             : ['#F9FAFB', '#E5E7EB']}  // Lighter, more subtle gradient
           style={styles.headerGradient}>
             <LinearGradient
               colors={colorScheme === 'dark'
-                ? ['rgba(139, 92, 246, 0.3)', 'rgba(139, 92, 246, 0.15)'] // More opaque
-                : ['rgba(139, 92, 246, 0.2)', 'rgba(139, 92, 246, 0.1)']} // Slightly more opaque
+                ? ['rgba(139, 92, 246, 0.4)', 'rgba(139, 92, 246, 0.2)'] 
+                : ['rgba(139, 92, 246, 0.2)', 'rgba(139, 92, 246, 0.1)']}
             style={styles.roundGradient}
             start={[0, 0]}
             end={[1, 1]}
           />
           <View style={styles.headerContent}>
             <View style={styles.headerTextContainer}>
-              <ThemedText type="title" style={styles.headerTitle}>
+              <ThemedText type="title" style={[
+                styles.headerTitle,
+                { color: colorScheme === 'dark' ? '#F3F4F6' : '#1F293B' }
+              ]}>
                   Dashboard
               </ThemedText>
-              <ThemedText style={styles.headerSubtitle}>
+              <ThemedText style={[
+                styles.headerSubtitle,
+                { color: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280' }
+              ]}>
                  {format(new Date(), 'MMMM d, yyyy')}
               </ThemedText>
             </View>
@@ -185,7 +219,10 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
       <Animated.ScrollView
-        style={[styles.container, { backgroundColor: '#F5F5F5' }]}
+        style={[
+          styles.container, 
+          { backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#F5F5F5' }
+        ]}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C2BD9"/>}
@@ -197,7 +234,13 @@ export default function HomeScreen() {
       >
         <DashboardMetrics />
         <ThemedView style={[styles.recentSection, { backgroundColor: 'transparent' }]}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <ThemedText 
+            type="subtitle" 
+            style={[
+              styles.sectionTitle, 
+              { color: colorScheme === 'dark' ? '#E5E7EB' : '#1F293B' }
+            ]}
+          >
             Recent Activities
           </ThemedText>
           <View style={styles.activitiesContainer}>

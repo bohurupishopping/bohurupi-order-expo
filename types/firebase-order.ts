@@ -22,8 +22,8 @@ export interface FirebaseOrder {
     qty: number;
     downloaddesign?: string;
   }>;
-  createdAt?: Date | string | null;
-  updatedAt?: Date | string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 export interface FirebaseProduct {
